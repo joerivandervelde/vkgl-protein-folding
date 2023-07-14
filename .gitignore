@@ -1,0 +1,14 @@
+# IntelliJ
+.idea
+
+# generated data
+data
+
+# Mac
+.DS_Store
+
+# R
+.Rhistory
+
+# compiled Java
+out
