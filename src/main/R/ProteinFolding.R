@@ -3,7 +3,8 @@
 ################################
 #install.packages('R.utils')
 #install.packages('ggplot2')
-#install.packages("reshape2") 
+#install.packages('reshape2') 
+#install.packages('dplyr') 
 
 #################
 # Load packages #
@@ -11,6 +12,7 @@
 library(R.utils)
 library(ggplot2)
 library(reshape2)
+library(dplyr)
 
 ##############################
 # Set gene name for all following steps
@@ -113,13 +115,38 @@ results<- results[ , !(names(results) %in% dropCols)]
 # melt dataframe for ggplot
 melted <- melt(results, id = c("protChange","classification")) 
 
-# plot
-ggplot(melted, aes(variable, protChange, fill= value)) + 
-  geom_tile() +
-  facet_grid(rows = vars(classification), scales = "free", space = "free") +
-  scale_fill_gradient(low = "white", high = "red") 
 
+####
+# plots
+###
 
-ggplot(melted, aes(variable, protChange, fill= value)) + 
-  geom_point()
+setwd(geneWorkingDir)
+
+plotdata <- melted %>%
+  group_by(classification, variable) %>%
+  summarize(n = n(),
+            mean = mean(value),
+            sd = sd(value),
+            se = sd / sqrt(n))
+
+ggplot(plotdata, 
+       aes(x = classification, 
+           y = mean,
+           color = classification)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - se, 
+                    ymax = mean + se),
+                width = .1) +
+  facet_grid(. ~ variable) +
+  theme_bw() +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        strip.text.x = element_text(size = 6)) +
+  labs(x="", 
+       y="", 
+       title=paste("FoldX terms for ", geneName, " based on VKGL variant classifications", sep=""),
+       subtitle = "(Means and standard errors, based on VKGL April 2023 public consensus, FoldX 5.0, and AlphaFold2 human proteome v4)") +
+  scale_colour_manual(name = "Classification", values = c("LB" = "#28A014","LP" = "#E41A1C"))
+ggsave(paste(geneName,".png",sep=""), width=9, height=5)
 
