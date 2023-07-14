@@ -1,0 +1,40 @@
+
+NF1 (Neurofibromatosis) has 9 fragments
+IRF6 (Van der Woude Syndrome) has 1 fragment, file = AF-O14896-F1-model_v4.pdb
+MEFV = AF-Q99959-F1-model_v4.pdb (1 fragment)
+
+https://pubmed.ncbi.nlm.nih.gov/33909047/
+Cis-acting modifiers in the ABCA4 locus contribute to the penetrance of the major disease-causing variant in Stargardt disease
+--> ABCA4 --> P78363 (1 fragment)
+
+
+
+----
+
+running FoldX
+
+make the cfg.cfg file
+make the mutant_file
+download PDB structure
+
+'repair' protein:
+foldx_20231231 --command=RepairPDB --pdb=AF-O15553-F1-model_v4.pdb
+see https://foldxsuite.crg.eu/command/RepairPDB
+
+predict mutation changes using BuildModel:
+foldx_20231231 -f cfg.cfg
+params see https://foldxsuite.crg.eu/command/BuildModel
+
+
+
+
+---
+
+
+## Bio3D ???
+install.packages("bio3d")
+library(bio3d)
+file <- "/Applications/FoldX/foldx5MacStd.tar_/AF-O15553-F1-model_v4_Repair.pdb"
+pdb <- read.pdb(file)
+plot.bio3d(pdb$atom$b[pdb$calpha], sse=pdb, typ="l", ylab="B-factor")
+
