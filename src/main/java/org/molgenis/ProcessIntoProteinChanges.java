@@ -9,11 +9,11 @@ public class ProcessIntoProteinChanges {
     public static void main(String args[]) throws Exception {
         System.out.println("Starting...");
 
-        File vkglMissense = new File("/Users/joeri/git/vkgl-protein-folding/data/VKGL_apr2023_annot_missense_novus_nodups.vcf");
-        File outputFile = new File("/Users/joeri/git/vkgl-protein-folding/data/VKGL_prot.tsv");
+        File vkglMissense = new File("/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_annot_missense.vcf");
+        File outputFile = new File("/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv");
 
-        Map<String,String> uniqClfProtChanges = new TreeMap<>();
-        Set<String> blackListed = new TreeSet<>();
+        Map<String,String> protChangesToClsf = new TreeMap<>();
+        Map<String,String> protChangesToChromPosRefAlt = new TreeMap<>();
         Scanner s = new Scanner(vkglMissense);
         String line;
         while(s.hasNextLine())
@@ -67,19 +67,35 @@ public class ProcessIntoProteinChanges {
                 // unless there is a different protein notation for a transcript, the notation is duplicate
                 // filter here by checking if gene-prot combination is already present
                 // at the same time check for any potential conflicting interpretations for this notation
-                if(uniqClfProtChanges.containsKey(geneProt))
+                if(protChangesToClsf.containsKey(geneProt))
                 {
-                    String prevClf = uniqClfProtChanges.get(geneProt);
+                    String prevClf = protChangesToClsf.get(geneProt);
                     if(!prevClf.equals(clf))
                     {
-                        System.out.println("Difference in classification for key '" + geneProt + "', at " + line);
-                        blackListed.add(geneProt);
+                        System.out.println("Difference in classification for key '" + geneProt + "' at " + line);
+                        if(prevClf.equals("LB"))
+                        {
+                            System.out.println("Solution: overriding LB with " + clf);
+                            protChangesToClsf.put(geneProt, clf);
+                        }else if(prevClf.equals("VUS") && clf.equals("LP"))
+                        {
+                            System.out.println("Solution: overriding VUS with " + clf);
+                            protChangesToClsf.put(geneProt, clf);
+                        }else if(prevClf.equals("LP"))
+                        {
+                            System.out.println("Solution: keeping LP");
+                        }
+                        else{
+                            // old is VUS, new is LB
+                            System.out.println("Solution: keeping VUS");
+                        }
                     }else{
                         // no difference in classification, so no need to add or do anything
                     }
                 }else{
-                    // first time add
-                    uniqClfProtChanges.put(geneProt, clf);
+                    // first time add, also store genome coordinates
+                    protChangesToClsf.put(geneProt, clf);
+                    protChangesToChromPosRefAlt.put(geneProt, (lineSplit[0] + "\t" + lineSplit[1] + "\t" + lineSplit[3] + "\t" + lineSplit[4]));
                 }
             }
         }
@@ -88,13 +104,10 @@ public class ProcessIntoProteinChanges {
         Write results, excluding blacklisted protein changes
          */
         PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
-        writer.write("Gene" + "\t" + "ProtChange" + "\t" + "Classification" + System.lineSeparator());
-        for(String key : uniqClfProtChanges.keySet())
+        writer.write("Assembly" + "\t" + "Chrom" + "\t" + "Pos" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "Gene" + "\t" + "ProtChange" + "\t" + "Classification" + System.lineSeparator());
+        for(String key : protChangesToClsf.keySet())
         {
-            if(blackListed.contains(key)){
-                continue;
-            }
-            writer.write(key + "\t" + uniqClfProtChanges.get(key) + System.lineSeparator());
+            writer.write("GRCh37" + "\t" + protChangesToChromPosRefAlt.get(key) + "\t" + key + "\t" + protChangesToClsf.get(key) + System.lineSeparator());
         }
         writer.flush();
         writer.close();
