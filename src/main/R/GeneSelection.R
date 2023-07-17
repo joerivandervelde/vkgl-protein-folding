@@ -19,18 +19,18 @@ protWithOneFragLoc <- "/Applications/AlphaFold2/misc/uniprotIds_singleFragment_o
 protWithOneFrag <- read.table(file=protWithOneFragLoc)
 
 # Leave only genes with 1 fragment
-vkgl <- vkgl[!(vkgl$Gene %in% protWithOneFrag$V1),]
+vkgl <- vkgl[vkgl$UniProtKB.Swiss.Prot.ID %in% protWithOneFrag$V1,]
 dim(vkgl)
 
 # Count classifications per gene and apply thresholds
-threshold <- 100
 geneCountsTable <- table(vkgl$Classification, vkgl$Gene)
-geneCounts <- geneCountsTable %>% as.data.frame()
-geneCountsCast <- dcast(geneCounts, Var2~Var1)
-sub <- subset(geneCountsCast, LB > threshold)
-sub2 <- subset(geneCountsCast, LP > threshold)
+geneCountsDF <- geneCountsTable %>% as.data.frame()
+geneCountsCast <- dcast(geneCountsDF, Var2~Var1)
+threshold <- 50
+genesThr <- subset(geneCountsCast, LB >= threshold)
+genesThr <- subset(genesThr, LP >= threshold)
 
 # Proportion of VUS, prioritize genes
-sub2$propVUS <- sub2$VUS/(sub2$LB+sub2$LP)
-sorted <- sub2[order(-sub2$propVUS),]
+genesThr$propVUS <- genesThr$VUS/(genesThr$LB+genesThr$LP)
+sorted <- genesThr[order(-genesThr$propVUS),]
 sorted
