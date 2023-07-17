@@ -27,7 +27,7 @@ library(dplyr)
 ##############################
 # Set gene name for all following steps
 ##############################
-geneName <- "MEFV"
+geneName <- "SCN5A"
 
 ######################################
 # Set gene working dir and resource paths #
@@ -99,9 +99,11 @@ for(i in 1:nrow(vkgl))
 }
 
 ###
-# TODO cleanup, remove rotabase and model files and such from gene tmp folders
+# Cleanup rotabase files generated for each mutation
 ###
-
+setwd(tmpDir)
+rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
+file.remove(rotabaseFiles)
 
 #####
 # Gather results
@@ -170,11 +172,8 @@ ggplot(plotdata,
        y="", 
        title=paste("FoldX terms for ", geneName, " based on VKGL variant classifications", sep=""),
        subtitle = "(Means and standard errors, based on VKGL April 2023 public consensus, FoldX 5.0, and AlphaFold2 human proteome v4)") +
-  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","LP/P" = "#E41A1C"))
+  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "darkgray","LP/P" = "#E41A1C"))
 ggsave(paste(geneName,".png",sep=""), width=9, height=5)
-
-
-
 
 
 ######
@@ -191,18 +190,18 @@ exons <- data.frame(exonStart = as.numeric(unlist(exonStartCoords)), exonEnd = a
 
 # Variable
 unique(melted$variable)
-termName <- "total.energy"
+termName <- "Van.der.Waals.clashes" # "total.energy"
 selectVar <- melted[melted$variable==termName,]
 
 # arrange for plot, LP/P on top
-variants <- variants %>% arrange(factor(classification, levels = c("LB/B","VUS","LP/P")))
-
+selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","LB/B","LP/P")))
 
 # Determine optimal threshold using Youden's Index #
-opt_cut <- cutpointr(selectVar, value, classification, direction = ">=", pos_class = "LP/P", neg_class = "LB/B", method = maximize_metric, metric = youden)
+cutpointDF <- subset(selectVar, classification != "VUS")
+opt_cut <- cutpointr(cutpointDF, value, classification, direction = ">=", pos_class = "LP/P", neg_class = "LB/B", method = maximize_metric, metric = youden)
 youdenIndex <- opt_cut$optimal_cutpoint
-tp <- sum(selectVar[selectVar$classification=="LP/P",'value'] >= youdenIndex)
-fp <- sum(selectVar[selectVar$classification=="LB/B",'value'] >= youdenIndex)
+tp <- sum(cutpointDF[cutpointDF$classification=="LP/P",'value'] >= youdenIndex)
+fp <- sum(cutpointDF[cutpointDF$classification=="LB/B",'value'] >= youdenIndex)
 ppv <- 100 *tp/(tp+fp)
 sens <- opt_cut$sensitivity*100
 
@@ -215,7 +214,7 @@ ymax <- max(selectVar$value)
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank(), axis.title.x=element_text(size=10)) +
   geom_rect(data = exons, aes(xmin = exonStart, xmax = exonEnd, ymin = ymin, ymax = ymax), linetype = 0, fill="lightgray", alpha = 1) +
-  geom_point(data = selectVar, aes(x=pos, y=value, colour=classification), alpha=1.0, size = 2, stroke = 1) +
+  geom_point(data = selectVar, aes(x=pos, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) +
   geom_hline(yintercept = youdenIndex) +
   scale_colour_manual(name = "Classification", values = c("LB/B" = "green","VUS" = "darkgray","LP/P" = "red")) +
   scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
