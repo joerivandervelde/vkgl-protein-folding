@@ -27,12 +27,13 @@ library(dplyr)
 ##############################
 # Set gene name for all following steps
 ##############################
-geneName <- "SCN5A"
+geneName <- "FGFR3"
 
 ######################################
 # Set gene working dir and resource paths #
 ######################################
-geneWorkingDir <- paste("/Users/joeri/git/vkgl-protein-folding/data/", geneName, sep="")
+dataDir <- "/Users/joeri/git/vkgl-protein-folding/data"
+geneWorkingDir <- paste(dataDir, geneName, sep="/")
 mkdirs(geneWorkingDir)
 setwd(geneWorkingDir)
 tmpDir <- paste(getwd(), "tmp", sep="/")
@@ -47,6 +48,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 #################################################
 geneMapping <- read.table(file=geneMappingLoc, sep = '\t',header = TRUE)
 uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneName]
+# if multiple, which one to pick?
 uniProtID
 
 ###
@@ -109,7 +111,7 @@ for(i in 1:nrow(vkgl))
 ###
 # Cleanup rotabase files generated for each mutation
 ###
-setwd(tmpDir)
+setwd(dataDir)
 rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
 file.remove(rotabaseFiles)
 
