@@ -89,11 +89,19 @@ for(i in 1:nrow(vkgl))
     cat("  already folded, skipping...\n")
     next
   }
+  if(length(list.files(protChangeDir, pattern="exception.txt")) > 0){
+    cat("  already tried before but failed, skipping...\n")
+    next
+  }
   cat("  folding...\n")
   file.copy(from = repPDBAbsLoc, to = protChangeDir)
   setwd(protChangeDir)
   write(paste(vkgl[i,7], ";", sep=""), file = "individual_list.txt")
-  system(paste(foldx, " --command=BuildModel --mutant-file=individual_list.txt --pdb=", repPDB, sep=""), intern = TRUE)
+  state <- system(paste(foldx, " --command=BuildModel --mutant-file=individual_list.txt --pdb=", repPDB, sep=""), intern = TRUE)
+  if(any(grepl("Specified residue not found", state)))
+  {
+    write(state, file = "exception.txt")
+  }
   file.remove(repPDB)
   cat("...done!\n")
 }
