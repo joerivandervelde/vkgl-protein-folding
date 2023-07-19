@@ -29,14 +29,13 @@ library(dplyr)
 ##############################
 geneName <- "FGFR3"
 
-######################################
-# Set gene working dir and resource paths #
-######################################
+##########################################
+# Create gene dirs and link to resources #
+##########################################
 dataDir <- "/Users/joeri/git/vkgl-protein-folding/data"
 geneWorkingDir <- paste(dataDir, geneName, sep="/")
 mkdirs(geneWorkingDir)
-setwd(geneWorkingDir)
-tmpDir <- paste(getwd(), "tmp", sep="/")
+tmpDir <- paste(geneWorkingDir, "tmp", sep="/")
 mkdirs(tmpDir)
 geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
@@ -48,8 +47,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 #################################################
 geneMapping <- read.table(file=geneMappingLoc, sep = '\t',header = TRUE)
 uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneName]
-# if multiple, which one to pick?
-uniProtID
+uniProtID # if multiple, which one to pick?
 
 ###
 # VKGL
@@ -59,24 +57,21 @@ vkgl <- subset(vkglAll, Gene == geneName)
 vkgl$Classification <- revalue(vkgl$Classification, c("LB"="LB/B", "VUS"="VUS", "LP"="LP/P"))
 dim(vkgl)
 
-###
-# Find in TAR file, extract into working dir, and unzip
-#####
-alphaFoldAll <- untar(alphaFoldLoc, list = TRUE)
-alphaFoldPDBs <- grep(".pdb.gz",alphaFoldAll,value=TRUE)
-PDBForGeneGz <- grep(uniProtID, alphaFoldPDBs,value=TRUE)
-PDBForGeneGz # if more than 1, must select correct fragment (todo)
-untar(alphaFoldLoc, files = PDBForGeneGz)
-PDBForGene <- gunzip(PDBForGeneGz, overwrite=TRUE)[[1]]
-
-#######
-# Fix the structure (may take a while)
-########
-repPDB <- gsub(".pdb", "_Repair.pdb", PDBForGene)
-if(length(list.files(pattern=repPDB)) == 0){
+##############
+# Find in TAR file, extract into working dir, gunzip and repair (may take a while)
+################
+setwd(geneWorkingDir)
+if(length(list.files(pattern="*_Repair.pdb")) == 0){
+  alphaFoldAll <- untar(alphaFoldLoc, list = TRUE)
+  alphaFoldPDBs <- grep(".pdb.gz",alphaFoldAll,value=TRUE)
+  PDBForGeneGz <- grep(uniProtID, alphaFoldPDBs,value=TRUE)
+  PDBForGeneGz # if more than 1, must select correct fragment (todo)
+  untar(alphaFoldLoc, files = PDBForGeneGz)
+  PDBForGene <- gunzip(PDBForGeneGz, overwrite=TRUE)[[1]]
   system(paste(foldx, " --command=RepairPDB --pdb=",PDBForGene,sep=""), intern = TRUE)
 }
-repPDBAbsLoc <- paste(getwd(), repPDB, sep="/")
+repPDB <- list.files(pattern="*_Repair.pdb")
+repPDBAbsLoc <- paste(geneWorkingDir, repPDB, sep="/")
 repPDBAbsLoc
 
 ####
@@ -84,6 +79,7 @@ repPDBAbsLoc
 ###
 for(i in 1:nrow(vkgl))
 {
+  # i=1  # Debug purposes
   cat(paste("Working on", vkgl[i, 7], "(", i, "of", dim(vkgl)[1],")\n", sep=" "))
   protChangeDir <- paste(tmpDir, vkgl[i, 7], sep="/")
   mkdirs(protChangeDir)
@@ -109,14 +105,14 @@ for(i in 1:nrow(vkgl))
 }
 
 ###
-# Cleanup rotabase files generated for each mutation
+# Cleanup rotabase files generated for each mutation in whole data dir
 ###
 setwd(dataDir)
 rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
 file.remove(rotabaseFiles)
 
 #####
-# Gather results
+# Gather results from tmp dir
 ######
 setwd(tmpDir)
 results <- data.frame()
@@ -147,22 +143,24 @@ dropCols <- c("Pdb")
 results<- results[ , !(names(results) %in% dropCols)]
 
 # melt dataframe for ggplot
-melted <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification")) 
-
+mResults <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification")) 
+mResultsNoVUS <- mResults[mResults$classification != "VUS",]
 
 ####
-# plots
+# Plots
 ###
 
 setwd(geneWorkingDir)
 
-plotdata <- melted %>%
+# Plot 1: overview of all FoldX terms for LB/B and LP/P variants
+plotdata <- mResultsNoVUS %>%
   group_by(classification, variable) %>%
   dplyr::summarize(n = n(),
             mean = mean(value),
+            median = median(value),
             sd = sd(value),
             se = sd / sqrt(n))
-
+plotdata$variable <- gsub("\\.", "\n", plotdata$variable)
 ggplot(plotdata, 
        aes(x = classification, 
            y = mean,
@@ -177,7 +175,7 @@ ggplot(plotdata,
         panel.grid.major.x = element_blank(),
         panel.grid.minor.y = element_blank(),
         strip.text.x = element_text(size = 6),
-        axis.text.x=element_text(size=4)) +
+        axis.text.x=element_text(size=7)) +
   labs(x="", 
        y="", 
        title=paste("FoldX terms for ", geneName, " based on VKGL variant classifications", sep=""),
@@ -187,7 +185,7 @@ ggsave(paste(geneName,".png",sep=""), width=9, height=5)
 
 
 ######
-# Gene plot for 1 attribute
+# Plot 2: gene plot per attribute
 ######
 
 # Retrieve gene and exon coordinates
@@ -198,10 +196,13 @@ exonStartCoords <- str_split(exonCoords$exon_chromstart, ",")
 exonEndCoords <- str_split(exonCoords$exon_chromend, ",")
 exons <- data.frame(exonStart = as.numeric(unlist(exonStartCoords)), exonEnd = as.numeric(unlist(exonEndCoords)))
 
-# Variable
-unique(melted$variable)
-termName <- "Van.der.Waals.clashes" # "total.energy"
-selectVar <- melted[melted$variable==termName,]
+# Loop over variables and create one plot for each
+for(termName in unique(mResults$variable))
+{
+
+# select the data for this term
+# termName <- "total.energy" # Debug purposes
+selectVar <- mResults[mResults$variable==termName,]
 
 # arrange for plot, LP/P on top
 selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","LB/B","LP/P")))
@@ -220,16 +221,20 @@ xmin <- min(exons$exonStart)
 xmax <- max(exons$exonEnd)
 ymin <- min(selectVar$value)
 ymax <- max(selectVar$value)
+
 # Create and save plot
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank(), axis.title.x=element_text(size=10)) +
   geom_rect(data = exons, aes(xmin = exonStart, xmax = exonEnd, ymin = ymin, ymax = ymax), linetype = 0, fill="lightgray", alpha = 1) +
   geom_point(data = selectVar, aes(x=pos, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) +
+  geom_text(data = selectVar, aes(x=pos, y=value, label=protChange), nudge_y=((ymax-ymin)/50), check_overlap = TRUE, alpha=1.0, size = 2) +
   geom_hline(yintercept = youdenIndex) +
-  scale_colour_manual(name = "Classification", values = c("LB/B" = "green","VUS" = "darkgray","LP/P" = "red")) +
+  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C")) +
   scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
   xlab(paste("",geneName," at GRCh37 chr",geneChr,":", xmin, "-",xmax,", lightgray: exons", sep="")) +
   ylab(termName) +
   ggtitle(paste("FoldX results for ",geneName,". At a threshold of ",round(youdenIndex, 2), " the PPV is ",round(ppv),"% and the sensitivity is ",round(sens),"%.",sep=""))
 ggsave(paste(geneName,"_",termName,".png",sep=""), width=9, height=5)
+
+}
 
