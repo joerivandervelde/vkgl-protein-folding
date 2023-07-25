@@ -113,6 +113,13 @@ setwd(dataDir)
 rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
 file.remove(rotabaseFiles)
 
+###
+# Cleanup plots
+###
+setwd(dataDir)
+pngFiles <- list.files(pattern="*.png", recursive=TRUE)
+file.remove(pngFiles)
+
 #####
 # Gather results from tmp dir
 ######
@@ -144,137 +151,21 @@ results <- results[, colSums(results != 0) > 0]
 dropCols <- c("Pdb")
 results<- results[ , !(names(results) %in% dropCols)]
 
-# melt dataframe for ggplot
-mResults <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification")) 
+# melt dataframe for ggplot, also a version without VUS variants
+mResults <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification"))
 mResultsNoVUS <- mResults[mResults$classification != "VUS",]
 
 ####
 # Plots
 ###
+setwd(dataDir)
+source("../src/main/R/PlotOverview.R")
+plotOverview()
 
-setwd(geneWorkingDir)
+setwd(dataDir)
+source("../src/main/R/PlotGene.R")
+plotGene()
 
-# Plot 1: overview of all FoldX terms for LB/B and LP/P variants
-plotdata <- mResultsNoVUS %>%
-  group_by(classification, variable) %>%
-  dplyr::summarize(n = n(),
-            mean = mean(value),
-            median = median(value),
-            sd = sd(value),
-            se = sd / sqrt(n))
-plotdata$variable <- gsub("\\.", "\n", plotdata$variable)
-ggplot(plotdata, 
-       aes(x = classification, 
-           y = mean,
-           color = classification)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = mean - se, 
-                    ymax = mean + se),
-                width = .1) +
-  facet_grid(. ~ variable) +
-  theme_bw() +
-  theme(legend.position = "none",
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        strip.text.x = element_text(size = 6),
-        axis.text.x=element_text(size=7)) +
-  labs(x="", 
-       y="", 
-       title=paste("FoldX terms for ", geneName, " based on VKGL variant classifications", sep=""),
-       subtitle = "(Means and standard errors, based on VKGL April 2023 public consensus, FoldX 5.0, and AlphaFold2 human proteome v4)") +
-  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "darkgray","LP/P" = "#E41A1C"))
-ggsave(paste("overview_",geneName,".png",sep=""), width=9, height=5)
-
-
-######
-# Plot 2: gene plot per attribute
-######
-
-# Retrieve gene and exon coordinates
-geneCoords <- subset(ENSGENES_37, gene_symbol==geneName)
-geneChr <- gsub("chr","", geneCoords$chrom)
-exonCoords <- subset(ENSEXONS_37, gene_symbol==geneName)
-exonStartCoords <- str_split(exonCoords$exon_chromstart, ",")
-exonEndCoords <- str_split(exonCoords$exon_chromend, ",")
-exons <- data.frame(exonStart = as.numeric(unlist(exonStartCoords)), exonEnd = as.numeric(unlist(exonEndCoords)))
-
-# Loop over variables and create one plot for each
-for(termName in unique(mResults$variable))
-{
-
-# select term data and arrange for plot, LP/P on top
-# termName <- "total.energy" # Debug purposes
-selectVar <- mResults[mResults$variable==termName,]
-selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","LB/B","LP/P")))
-
-# Determine optimal threshold using Youden's Index #
-cutpointDF <- subset(selectVar, classification != "VUS")
-opt_cut <- cutpointr(cutpointDF, value, classification, direction = ">=", pos_class = "LP/P", neg_class = "LB/B", method = maximize_metric, metric = youden)
-youdenIndex <- opt_cut$optimal_cutpoint
-tp <- sum(cutpointDF[cutpointDF$classification=="LP/P",'value'] >= youdenIndex)
-fp <- sum(cutpointDF[cutpointDF$classification=="LB/B",'value'] >= youdenIndex)
-ppv <- 100 *tp/(tp+fp)
-sens <- opt_cut$sensitivity*100
-
-# Determine plot window
-xmin <- min(exons$exonStart)
-xmax <- max(exons$exonEnd)
-ymin <- min(selectVar$value)
-ymax <- max(selectVar$value)
-
-# Create and save plot
-ggplot() +
-  theme_bw() + theme(panel.grid = element_blank(), axis.title.x=element_text(size=10)) +
-  geom_rect(data = exons, aes(xmin = exonStart, xmax = exonEnd, ymin = ymin, ymax = ymax), linetype = 0, fill="lightgray", alpha = 1) +
-  geom_point(data = selectVar, aes(x=pos, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) +
-  geom_text(data = selectVar, aes(x=pos, y=value, label=protChange), nudge_y=((ymax-ymin)/50), check_overlap = TRUE, alpha=1.0, size = 2) +
-  geom_hline(yintercept = youdenIndex) +
-  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C")) +
-  scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
-  xlab(paste("",geneName," at GRCh37 chr",geneChr,":", xmin, "-",xmax,", lightgray: exons", sep="")) +
-  ylab(termName) +
-  ggtitle(paste("FoldX results for ",geneName,". At a threshold of ",round(youdenIndex, 2), " the PPV is ",round(ppv),"% and the sensitivity is ",round(sens),"%.",sep=""))
-ggsave(paste("genomicpos_",geneName,"_",termName,".png",sep=""), width=9, height=5)
-
-####
-# Protein based plot
-####
-
-# Determine amino acid position based plot window
-selectVar$aaLoc <- gsub("[A-Z]", "", selectVar$protChange)
-selectVar$aaLoc <- as.numeric(selectVar$aaLoc)
-xmin <- min(selectVar$aaLoc)
-xmax <- max(selectVar$aaLoc)
-ymin <- min(selectVar$value)
-ymax <- max(selectVar$value)
-
-selectVarLP <- subset(selectVar, classification == "LP/P")
-selectVarLB <- subset(selectVar, classification == "LB/B")
-
-xRes = 200
-yRes = 200
-smoothLP <- MASS::kde2d(selectVarLP$aaLoc, selectVarLP$value, n=c(xRes, yRes),lims=c(range(selectVar$aaLoc), range(selectVar$value))) 
-smoothLB <- MASS::kde2d(selectVarLB$aaLoc, selectVarLB$value, n=c(xRes, yRes),lims=c(range(selectVar$aaLoc), range(selectVar$value))) 
-smoothDiff <- list(x = smoothLP$x, y = smoothLP$y, z = smoothLP$z-smoothLB$z)
-
-df_smoothedDiff <- smoothDiff$z %>% 
-  as_tibble() %>%
-  pivot_longer(cols = everything(), names_to = "col", values_to = "val") %>% 
-  mutate(aaLoc = rep(smoothDiff$x, each=yRes),
-         value = rep(smoothDiff$y, xRes))
-
-# Create and save plot
-ggplot() +
-  theme_bw() + theme(panel.grid = element_blank(), axis.title.x=element_text(size=10)) +
-  geom_tile(data = df_smoothedDiff, aes(x=aaLoc, y=value, fill = val), na.rm = TRUE) +
-  geom_point(data = selectVar, aes(x=aaLoc, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) +
-  scale_fill_gradient2(name=paste("Difference\nin 2D kernel\ndensity esti-\nmation of\n",termName,"\n(LP/P-LB/B)",sep=""), low = "#28A014", mid = "white", high = "#E41A1C") +
-  scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C")) +
-  geom_text(data = selectVar, aes(x=aaLoc, y=value, label=protChange), nudge_y=((ymax-ymin)/50), check_overlap = TRUE, alpha=1.0, size = 2) +
-  scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
-  xlab(paste(geneName, sep="")) +
-  ylab(termName) +
-  ggtitle(paste("FoldX results for ", geneName, sep=""))
-ggsave(paste("aapos_",geneName,"_",termName,".png",sep=""), width=9, height=5)
-
-}
+setwd(dataDir)
+source("../src/main/R/PlotProtein.R")
+plotProtein()
