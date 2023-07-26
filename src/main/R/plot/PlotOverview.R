@@ -32,4 +32,4 @@
          title=paste("FoldX terms for ", geneName, " based on VKGL variant classifications", sep=""),
          subtitle = "(Means and standard errors, based on VKGL April 2023 public consensus, FoldX 5.0, and AlphaFold2 human proteome v4)") +
     scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "darkgray","LP/P" = "#E41A1C"))
-  ggsave(paste("overview_",geneName,".png",sep=""), width=9, height=5)
+  ggsave(paste("overview_",geneName,".pdf",sep=""), width=9, height=5)
