@@ -11,6 +11,7 @@
 #install.packages('plyr')
 #install.packages('dplyr')
 
+
 #################
 # Load packages #
 #################
@@ -27,10 +28,12 @@ library(MASS)
 library(tidyr)
 library(seqminer)
 
+
 ##############################
 # Set gene name for all following steps
 ##############################
 geneName <- "CFTR"
+
 
 ##########################################
 # Create gene dirs and link to resources #
@@ -48,6 +51,7 @@ vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
 clinVarLoc <- "/Applications/ClinVar/clinvar_20230702.vcf.gz"
 
+
 #################################################
 # Retrieve mapping of HGNC symbol to UniProt ID #
 #################################################
@@ -56,22 +60,9 @@ uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneNa
 uniProtID # if multiple, which one to pick?
 
 
-
-## Load VKGL data (B37)
-setwd(scriptDir)
-source("load/LoadVKGL.R")
-
-## Load ClinVar data (B38)
-# needs 
-setwd(scriptDir)
-source("load/LoadClinVar.R")
-
-
-
-
-##############
-# Find in TAR file, extract into working dir, gunzip and repair (may take a while)
-################
+####################################################################################
+# Find in TAR file, extract into working dir, gunzip and repair (may take a while) #
+####################################################################################
 setwd(geneWorkingDir)
 if(length(list.files(pattern="*_Repair.pdb")) == 0){
   alphaFoldAll <- untar(alphaFoldLoc, list = TRUE)
@@ -86,9 +77,21 @@ repPDB <- list.files(pattern="*_Repair.pdb")
 repPDBAbsLoc <- paste(geneWorkingDir, repPDB, sep="/")
 repPDBAbsLoc
 
-####
-# Generate individual_list.txt and fold
-###
+
+##################################################
+# Load genome coordinates and clinical variation #
+##################################################
+setwd(scriptDir)
+source("load/LoadGenomicCoordinates.R") # Coordinates of genes and exons for build 37 and 38
+setwd(scriptDir)
+source("load/LoadVKGL.R") # Load VKGL data (B37)
+setwd(scriptDir)
+source("load/LoadClinVar.R") # Load ClinVar data (B38)
+
+
+#########################################
+# Generate individual_list.txt and fold #
+#########################################
 for(i in 1:nrow(vkgl))
 {
   # i=1  # Debug purposes
@@ -116,25 +119,21 @@ for(i in 1:nrow(vkgl))
   cat("...done!\n")
 }
 
-###
-# Cleanup rotabase files generated for each mutation in whole data dir
-###
+######################################################
+# Cleanup all rotabase files and gene-specific plots #
+######################################################
 setwd(dataDir)
 rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
 file.remove(rotabaseFiles)
-
-###
-# Cleanup plots
-###
-setwd(dataDir)
+setwd(geneWorkingDir)
 pngFiles <- list.files(pattern="*.png", recursive=TRUE)
 file.remove(pngFiles)
 pdfFiles <- list.files(pattern="*.pdf", recursive=TRUE)
 file.remove(pdfFiles)
 
-#####
-# Gather results from tmp dir
-######
+############################################
+# Gather folding results from gene tmp dir #
+############################################
 setwd(tmpDir)
 results <- data.frame()
 for(i in 1:nrow(vkgl))
@@ -158,18 +157,19 @@ for(i in 1:nrow(vkgl))
   results <- rbind(results, result)
 }
 
-# drop columns with only 0 and 'Pdb'
+########################################################################################
+# Postprocess results: drop 0/'Pdb' columns, melt for ggplot, and make VUSless version #
+########################################################################################
 results <- results[, colSums(results != 0) > 0]
 dropCols <- c("Pdb")
 results<- results[ , !(names(results) %in% dropCols)]
-
-# melt dataframe for ggplot, also a version without VUS variants
 mResults <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification"))
 mResultsNoVUS <- mResults[mResults$classification != "VUS",]
 
-####
-# Plots
-###
+
+########################
+# Create various plots #
+########################
 setwd(scriptDir)
 source("plot/PlotOverview.R")
 
