@@ -1,0 +1,15 @@
+# Retrieve gene and exon coordinates
+geneCoordsB37 <- subset(ENSGENES_37, gene_symbol==geneName)
+geneChrB37 <- gsub("chr","", geneCoordsB37$chrom)
+exonCoordsB37 <- subset(ENSEXONS_37, gene_symbol==geneName)
+exonStartCoordsB37 <- str_split(exonCoordsB37$exon_chromstart, ",")
+exonEndCoordsB37 <- str_split(exonCoordsB37$exon_chromend, ",")
+exonsB37 <- data.frame(exonStart = as.numeric(unlist(exonStartCoordsB37)), exonEnd = as.numeric(unlist(exonEndCoordsB37)))
+
+geneCoordsB38 <- subset(ENSGENES, gene_symbol==geneName)
+geneChrB38 <- gsub("chr","", geneCoordsB38$chrom)
+exonCoordsB38 <- subset(ENSEXONS, gene_symbol==geneName)
+exonStartCoordsB38 <- str_split(exonCoordsB38$exon_chromstart, ",")
+exonEndCoordsB38 <- str_split(exonCoordsB38$exon_chromend, ",")
+exonsB38 <- data.frame(exonStart = as.numeric(unlist(exonStartCoordsB38)), exonEnd = as.numeric(unlist(exonEndCoordsB38)))
+geneTabixB38 <- paste(geneChrB38, paste(geneCoordsB38$gene_start, geneCoordsB38$gene_end, sep="-"), sep=":")

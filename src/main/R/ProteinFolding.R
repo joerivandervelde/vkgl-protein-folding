@@ -25,16 +25,19 @@ library(plyr)
 library(dplyr)
 library(MASS)
 library(tidyr)
+library(seqminer)
 
 ##############################
 # Set gene name for all following steps
 ##############################
-geneName <- "FGFR3"
+geneName <- "CFTR"
 
 ##########################################
 # Create gene dirs and link to resources #
 ##########################################
-dataDir <- "/Users/joeri/git/vkgl-protein-folding/data"
+rootDir <- "/Users/joeri/git/vkgl-protein-folding/"
+scriptDir <- paste(rootDir, "src/main/R", sep="/")
+dataDir <- paste(rootDir, "data", sep="/")
 geneWorkingDir <- paste(dataDir, geneName, sep="/")
 mkdirs(geneWorkingDir)
 tmpDir <- paste(geneWorkingDir, "tmp", sep="/")
@@ -43,6 +46,7 @@ geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
 vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
+clinVarLoc <- "/Applications/ClinVar/clinvar_20230702.vcf.gz"
 
 #################################################
 # Retrieve mapping of HGNC symbol to UniProt ID #
@@ -51,13 +55,19 @@ geneMapping <- read.table(file=geneMappingLoc, sep = '\t',header = TRUE)
 uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneName]
 uniProtID # if multiple, which one to pick?
 
-###
-# VKGL
-####
-vkglAll <- read.table(file=vkglProtLoc, sep = '\t', header = TRUE)
-vkgl <- subset(vkglAll, Gene == geneName)
-vkgl$Classification <- revalue(vkgl$Classification, c("LB"="LB/B", "VUS"="VUS", "LP"="LP/P"))
-dim(vkgl)
+
+
+## Load VKGL data (B37)
+setwd(scriptDir)
+source("load/LoadVKGL.R")
+
+## Load ClinVar data (B38)
+# needs 
+setwd(scriptDir)
+source("load/LoadClinVar.R")
+
+
+
 
 ##############
 # Find in TAR file, extract into working dir, gunzip and repair (may take a while)
@@ -119,6 +129,8 @@ file.remove(rotabaseFiles)
 setwd(dataDir)
 pngFiles <- list.files(pattern="*.png", recursive=TRUE)
 file.remove(pngFiles)
+pdfFiles <- list.files(pattern="*.pdf", recursive=TRUE)
+file.remove(pdfFiles)
 
 #####
 # Gather results from tmp dir
@@ -158,14 +170,12 @@ mResultsNoVUS <- mResults[mResults$classification != "VUS",]
 ####
 # Plots
 ###
-setwd(dataDir)
-source("../src/main/R/PlotOverview.R")
-plotOverview()
+setwd(scriptDir)
+source("plot/PlotOverview.R")
 
-setwd(dataDir)
-source("../src/main/R/PlotGene.R")
-plotGene()
+setwd(scriptDir)
+source("plot/PlotProtein.R")
 
-setwd(dataDir)
-source("../src/main/R/PlotProtein.R")
-plotProtein()
+setwd(scriptDir)
+source("plot/PlotGene.R")
+
