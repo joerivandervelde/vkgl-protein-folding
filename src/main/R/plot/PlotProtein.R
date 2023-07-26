@@ -1,23 +1,19 @@
+####
+# Protein based plot, 1 per attribute
+####
 
+setwd(geneWorkingDir)
   
-  ####
-  # Protein based plot
-  ####
-  
-  setwd(geneWorkingDir)
-  
-
-  
-  # Loop over variables and create one plot for each
-  for(termName in unique(mResults$variable))
-  {
+# Loop over variables and create one plot for each
+for(termName in unique(mResults$variable))
+{
     
-    # select term data and arrange for plot, LP/P on top
-    # termName <- "Backbone.Hbond" # Debug purposes
-    cat(paste("Plotting term", termName,"\n", sep=" "))
-    selectVar <- mResults[mResults$variable==termName,]
-    selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","LB/B","LP/P")))
-  
+  # select term data and arrange for plot, LP/P on top
+  # termName <- "Backbone.Hbond" # Debug purposes
+  cat(paste("Plotting term", termName,"\n", sep=" "))
+  selectVar <- mResults[mResults$variable==termName,]
+  selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","LB/B","LP/P")))
+
   # Determine amino acid position based plot window
   selectVar$aaLoc <- gsub("[A-Z]", "", selectVar$protChange)
   selectVar$aaLoc <- as.numeric(selectVar$aaLoc)
@@ -71,5 +67,4 @@
     ggtitle(paste("FoldX", termName, "results for clinically relevant variants in", geneName, "", sep=" "))
   ggsave(paste("aapos_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
   
-  }
-  
+}

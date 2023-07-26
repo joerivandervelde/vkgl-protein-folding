@@ -1,16 +1,12 @@
+######
+# Gene plots, 1 per attribute
+######
 
-  ######
-  # Plot 2: gene plot per attribute
-  ######
-  
-  setwd(geneWorkingDir)
-  
+setwd(geneWorkingDir)
 
-  
-  # Loop over variables and create one plot for each
-  for(termName in unique(mResults$variable))
-  {
-    
+# Loop over variables and create one plot for each
+for(termName in unique(mResults$variable))
+{
     # select term data and arrange for plot, LP/P on top
     # termName <- "total.energy" # Debug purposes
     selectVar <- mResults[mResults$variable==termName,]
@@ -44,6 +40,5 @@
       ylab(termName) +
       ggtitle(paste("FoldX results for ",geneName,". At a threshold of ",round(youdenIndex, 2), " the PPV is ",round(ppv),"% and the sensitivity is ",round(sens),"%.",sep=""))
     ggsave(paste("genomicpos_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
-    
-  }
-  
+
+}
