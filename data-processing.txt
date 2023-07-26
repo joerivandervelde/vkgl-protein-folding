@@ -6,7 +6,6 @@ academic license
 /Applications/FoldX/foldx5MacC11/foldx_20231231
 
 
-
 --- alphafold2 data:
 
 from:
@@ -15,7 +14,6 @@ https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000005640_9606_HUMAN_v4.t
 
 Fragments:
 The uncompressed archive files (.tar) contain all the available compressed PDB and mmCIF files (.gz) for a reference proteome. In the case of proteins longer than 2700 amino acids (aa), AlphaFold provides 1400aa long, overlapping fragments. For example, Titin has predicted fragment structures named as Q8WZ42-F1 (residues 1–1400), Q8WZ42-F2 (residues 201–1600), etc. These fragments are currently only available for the human proteome in these proteome archive files, not on the website.
-
 
 mapping:
 BioMart
@@ -29,7 +27,7 @@ export File TSV
 
 save as hgnc-uniprot-mapping.txt
 
---- vkgl data:
+--- prep VKGL data:
 
 download latest VKGL release from
 https://vkgl.molgeniscloud.org/menu/main/background
@@ -78,7 +76,7 @@ add header:
 copy over to hpc
 scp VKGL_public_consensus_apr2023.vcf airlock+gearshift:/groups/umcg-gcc/tmp01/umcg-jvelde/protein-folding
 
---- run VEP
+--- run VEP on VKGL data
 
 
 ssh airlock+gearshift
@@ -92,8 +90,10 @@ bcftools sort VKGL_public_consensus_apr2023.vcf -o VKGL_apr2023_sorted.vcf
 
 wget https://download.molgeniscloud.org/downloads/vip/images/vep-109.3.sif
 
-# vep args:https://github.com/molgenis/vip/blob/5893f1f66426e2b2b19378070e6e1d509fa120ea/modules/vcf/templates/annotate.sh#L161
+# vep args in VIP manual:https://github.com/molgenis/vip/blob/5893f1f66426e2b2b19378070e6e1d509fa120ea/modules/vcf/templates/annotate.sh#L161
+# VEP args in VEP manual https://www.ensembl.org/info/docs/tools/vep/script/vep_options.html
 
+build 37 (!!)
 rm output.vcf output.vcf_summary.html
 apptainer exec --bind="/groups,/apps,/tmp" vep-109.3.sif vep -i VKGL_apr2023_sorted.vcf -o VKGL_apr2023_annot.vcf --format=vcf --vcf --species=homo_sapiens --assembly=GRCh37 --refseq --symbol --offline --exclude_predicted --use_given_ref --cache --dir_cache /groups/umcg-gcc/rsc01/vip/v5.8.0/resources/vep/cache
 
@@ -104,7 +104,29 @@ remove lines that do not contain 'missense_variant'
 remove lines with VUS
 remove duplicates
 
-then post-process in Java ProcessIntoProteinChanges.java
+then post-process in Java: VKGLProcessIntoProteinChanges.java
 to arrive at final list with format GENE - PROTEINCHANGE - CLASSIFICATION
+
+
+--- run VEP on ClinVar data
+
+
+ssh airlock+gearshift
+cd /groups/umcg-gcc/tmp01/umcg-jvelde/protein-folding/
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20230722.vcf.gz
+
+build 38 (!!)
+apptainer exec --bind="/groups,/apps,/tmp" vep-109.3.sif vep -i clinvar_20230722.vcf.gz -o clinvar_b38_20230722_vep.vcf.gz --format=vcf --vcf --compress_output=bgzip --species=homo_sapiens --assembly=GRCh38 --refseq --symbol --offline --exclude_predicted --use_given_ref --cache --dir_cache /groups/umcg-gcc/rsc01/vip/v5.8.0/resources/vep/cache
+
+#module load BCFtools
+#bcftools view -o clinvar_20230722_annot_fix.vcf.gz -O z clinvar_20230722_annot.vcf.gz
+
+exit
+scp airlock+gearshift:/groups/umcg-gcc/tmp01/umcg-jvelde/protein-folding/clinvar_b38_20230722_vep.vcf.gz .
+
+post-process in Java: ClinVarProcessIntoProteinChanges.java
+to arrive at final list with format GENE - PROTEINCHANGE - CLASSIFICATION
+
+
 
 
