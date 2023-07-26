@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class ProcessIntoProteinChanges {
+public class VKGLProcessIntoProteinChanges {
 
     public static void main(String args[]) throws Exception {
         System.out.println("Starting...");
