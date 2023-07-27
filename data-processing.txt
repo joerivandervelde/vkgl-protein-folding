@@ -116,7 +116,7 @@ cd /groups/umcg-gcc/tmp01/umcg-jvelde/protein-folding/
 wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20230722.vcf.gz
 
 build 38 (!!)
-apptainer exec --bind="/groups,/apps,/tmp" vep-109.3.sif vep -i clinvar_20230722.vcf.gz -o clinvar_b38_20230722_vep.vcf.gz --format=vcf --vcf --compress_output=bgzip --species=homo_sapiens --assembly=GRCh38 --refseq --symbol --offline --exclude_predicted --use_given_ref --cache --dir_cache /groups/umcg-gcc/rsc01/vip/v5.8.0/resources/vep/cache
+nohup apptainer exec --bind="/groups,/apps,/tmp" vep-109.3.sif vep -i clinvar_20230722.vcf.gz -o clinvar_b38_20230722_vep.vcf.gz --format=vcf --vcf --compress_output=bgzip --species=homo_sapiens --assembly=GRCh38 --refseq --symbol --offline --exclude_predicted --use_given_ref --cache --dir_cache /groups/umcg-gcc/rsc01/vip/v5.8.0/resources/vep/cache &
 
 #module load BCFtools
 #bcftools view -o clinvar_20230722_annot_fix.vcf.gz -O z clinvar_20230722_annot.vcf.gz
