@@ -38,7 +38,7 @@ geneName <- "CFTR"
 ##########################################
 # Create gene dirs and link to resources #
 ##########################################
-rootDir <- "/Users/joeri/git/vkgl-protein-folding/"
+rootDir <- "/Users/joeri/git/vkgl-protein-folding"
 scriptDir <- paste(rootDir, "src/main/R", sep="/")
 dataDir <- paste(rootDir, "data", sep="/")
 geneWorkingDir <- paste(dataDir, geneName, sep="/")
@@ -49,7 +49,7 @@ geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
 vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
-clinVarLoc <- "/Applications/ClinVar/clinvar_20230702.vcf.gz"
+clinVarLoc <- "/Users/joeri/ClinVar/clinvar_20230722_protForFolding.tsv"
 
 
 #################################################
@@ -87,16 +87,18 @@ setwd(scriptDir)
 source("load/LoadVKGL.R") # Load VKGL data (B37)
 setwd(scriptDir)
 source("load/LoadClinVar.R") # Load ClinVar data (B38)
+variants <- merge(x = vkgl, y = clinVar, all = TRUE, by = "ProtChange")
+variants$rowSource <- apply(variants[c("source.x", "source.y")], 1, function(x) paste(na.omit(x), collapse = ""))
 
 
 #########################################
 # Generate individual_list.txt and fold #
 #########################################
-for(i in 1:nrow(vkgl))
+for(i in 1:nrow(variants))
 {
-  # i=1  # Debug purposes
-  cat(paste("Working on", vkgl[i, 7], "(", i, "of", dim(vkgl)[1],")\n", sep=" "))
-  protChangeDir <- paste(tmpDir, vkgl[i, 7], sep="/")
+  #i=1  # Debug purposes
+  cat(paste("Working on", variants[i, "ProtChange"], "(", i, "of", dim(variants)[1],")\n", sep=" "))
+  protChangeDir <- paste(tmpDir, variants[i, "ProtChange"], sep="/")
   mkdirs(protChangeDir)
   if(length(list.files(protChangeDir, pattern="*.fxout")) > 0){
     cat("  already folded, skipping...\n")
@@ -109,7 +111,7 @@ for(i in 1:nrow(vkgl))
   cat("  folding...\n")
   file.copy(from = repPDBAbsLoc, to = protChangeDir)
   setwd(protChangeDir)
-  write(paste(vkgl[i,7], ";", sep=""), file = "individual_list.txt")
+  write(paste(variants[i, "ProtChange"], ";", sep=""), file = "individual_list.txt")
   state <- system(paste(foldx, " --command=BuildModel --mutant-file=individual_list.txt --pdb=", repPDB, sep=""), intern = TRUE)
   if(any(grepl("Specified residue not found", state)))
   {
@@ -136,24 +138,19 @@ file.remove(pdfFiles)
 ############################################
 setwd(tmpDir)
 results <- data.frame()
-for(i in 1:nrow(vkgl))
+for(i in 1:nrow(variants))
 {
-  cat(paste("Collecting results from ", vkgl[i, 7], "(", i, "of", dim(vkgl)[1],")\n", sep=" "))
-  protChangeDir <- paste(tmpDir, vkgl[i, 7], sep="/")
+  cat(paste("Collecting results from ", variants[i, 7], "(", i, "of", dim(variants)[1],")\n", sep=" "))
+  protChangeDir <- paste(tmpDir, variants[i, 7], sep="/")
   if(length(list.files(protChangeDir, pattern="*.fxout")) == 0){
     cat("  no results...\n")
     next
   }
   avgDiff <- list.files(protChangeDir, pattern="Average")
   result <- read.table(file = paste(protChangeDir, avgDiff, sep="/"), header = TRUE, skip = 8, sep="\t")
-  result$assembly <- vkgl[i, 1]
-  result$chrom <- vkgl[i, 2]
-  result$pos <- vkgl[i, 3]
-  result$ref <- vkgl[i, 4]
-  result$alt <- vkgl[i, 5]
-  result$gene <- vkgl[i, 6]
-  result$protChange <- vkgl[i, 7]
-  result$classification <- vkgl[i, 8]
+  result$protChange <- vkgl[i, "ProtChange"]
+  result$classificationVKGL <- vkgl[i, "Classification.x"]
+  result$classificationClinVar <- vkgl[i, "Classification.y"]
   results <- rbind(results, result)
 }
 
