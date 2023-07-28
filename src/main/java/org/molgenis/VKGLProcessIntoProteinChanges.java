@@ -72,23 +72,25 @@ public class VKGLProcessIntoProteinChanges {
                     String prevClf = protChangesToClsf.get(geneProt);
                     if(!prevClf.equals(clf))
                     {
-                        System.out.println("Difference in classification for key '" + geneProt + "' at " + line);
-                        if(prevClf.equals("LB"))
-                        {
-                            System.out.println("Solution: overriding LB with " + clf);
-                            protChangesToClsf.put(geneProt, clf);
-                        }else if(prevClf.equals("VUS") && clf.equals("LP"))
-                        {
-                            System.out.println("Solution: overriding VUS with " + clf);
-                            protChangesToClsf.put(geneProt, clf);
-                        }else if(prevClf.equals("LP"))
-                        {
-                            System.out.println("Solution: keeping LP");
-                        }
-                        else{
-                            // old is VUS, new is LB
-                            System.out.println("Solution: keeping VUS");
-                        }
+                        System.out.println("Conflicting classification for key '" + geneProt + "' at " + line);
+                        protChangesToClsf.put(geneProt, "CF");
+
+//                        if(prevClf.equals("LB"))
+//                        {
+//                            System.out.println("Solution: overriding LB with " + clf);
+//                            protChangesToClsf.put(geneProt, clf);
+//                        }else if(prevClf.equals("VUS") && clf.equals("LP"))
+//                        {
+//                            System.out.println("Solution: overriding VUS with " + clf);
+//                            protChangesToClsf.put(geneProt, clf);
+//                        }else if(prevClf.equals("LP"))
+//                        {
+//                            System.out.println("Solution: keeping LP");
+//                        }
+//                        else{
+//                            // old is VUS, new is LB
+//                            System.out.println("Solution: keeping VUS");
+//                        }
                     }else{
                         // no difference in classification, so no need to add or do anything
                     }
