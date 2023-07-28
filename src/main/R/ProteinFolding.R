@@ -133,6 +133,7 @@ file.remove(pngFiles)
 pdfFiles <- list.files(pattern="*.pdf", recursive=TRUE)
 file.remove(pdfFiles)
 
+
 ############################################
 # Gather folding results from gene tmp dir #
 ############################################
@@ -180,9 +181,9 @@ for (i in 1:nrow(results)) {
 #######################################################################################
 results <- results[, colSums(results != 0, na.rm = TRUE) > 0]
 results <- results[ , !(names(results) %in% c("Pdb"))]
-mResults <- melt(results, id = c("protChange","source","classificationVKGL","classificationClinVar","classification"))
-mResults$aaLoc <- gsub("[A-Z]", "", mResults$protChange)
-mResults$aaLoc <- as.numeric(mResults$aaLoc)
+results$aaLoc <- gsub("[A-Z]", "", results$protChange)
+results$aaLoc <- as.numeric(results$aaLoc)
+mResults <- melt(results, id = c("aaLoc","protChange","source","classificationVKGL","classificationClinVar","classification"))
 
 
 ########################
@@ -200,4 +201,8 @@ source("plot/PlotPredictProtein.R")
 # Obsolete, difficult anyway because of combined b37/b38 data
 #setwd(scriptDir)
 #source("plot/PlotGene.R")
+
+# export any data
+#write.table(results, sep="\t",file="cftr_vkgl_clinvar_foldx_af2_results.txt", quote=FALSE, row.names =FALSE)
+
 

@@ -7,13 +7,12 @@ setwd(geneWorkingDir)
 xmin <- min(mResults$aaLoc)
 xmax <- max(mResults$aaLoc)
 
-  
 # Loop over variables and create one plot for each
 for(termName in unique(mResults$variable))
 {
     
   # select term data and arrange for plot, LP/P on top
-  # termName <- "Backbone.Hbond" # Debug purposes
+  # termName <- "total.energy" # Debug purposes
   cat(paste("Plotting term", termName,"\n", sep=" "))
   selectVar <- mResults[mResults$variable==termName,]
   selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","CF","LB/B","LP/P")))
@@ -31,7 +30,8 @@ for(termName in unique(mResults$variable))
     scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
     xlab(paste("Amino acid position within protein alpha chain of", geneName, sep=" ")) +
     ylab(paste("Wild type vs mutant difference in",termName, sep=" ")) +
-    ggtitle(paste("FoldX", termName, "results for clinically relevant variants in", geneName, "", sep=" "))
+    ggtitle(label = paste("FoldX", termName, "results for VKGL and ClinVar variants in", geneName, "", sep=" "),
+          subtitle = "(based on VKGL public release April 2023, ClinVar 20230702, FoldX 5.0, and AlphaFold2 human proteome v4)")
   ggsave(paste("aapos_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
   
 }

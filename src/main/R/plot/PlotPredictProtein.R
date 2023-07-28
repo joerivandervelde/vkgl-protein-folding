@@ -64,16 +64,14 @@ for(termName in unique(mResults$variable))
     theme_bw() + theme(panel.grid = element_blank(), axis.title.x=element_text(size=10)) +
     geom_tile(data = df_smoothedDiff, aes(x=aaLoc, y=value, fill = val), na.rm = TRUE) +
     geom_point(data = selectVarVKGL, aes(x=aaLoc, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) +
-    scale_fill_gradient2(name=paste("Difference\nin 2D kernel\ndensity esti-\nmation of\n",gsub("\\.", "\n", termName),"\n(LP/P-LB/B)",sep=""), low = "#28A014", mid = "white", high = "#E41A1C") +
-    scale_colour_manual(name = "Classification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C", "Conflicting" = "orange")) +
+    scale_fill_gradient2(name=paste("ClinVar\ndifference\nin 2D kernel\ndensity esti-\nmation of\n",gsub("\\.", "\n", termName),"\n(LP/P-LB/B)",sep=""), low = "#28A014", mid = "white", high = "#E41A1C") +
+    scale_colour_manual(name = "VKGL\nclassification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C", "Conflicting" = "orange")) +
     geom_text(data = selectVarVKGL, aes(x=aaLoc, y=value, label=protChange), nudge_y=((ymax-ymin)/50), check_overlap = TRUE, alpha=1.0, size = 2) +
-    #scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
-    #scale_y_continuous(limits = c(ymin,ymax), labels = comma) +
+    scale_x_continuous(limits = c(xmin,xmax), labels = comma) +
+    scale_y_continuous(limits = c(ymin,ymax), labels = comma) +
     xlab(paste("Amino acid position within protein alpha chain of", geneName, sep=" ")) +
     ylab(paste("Wild type vs mutant difference in",termName, sep=" ")) +
-    ggtitle(paste("FoldX", termName, "results for clinically relevant variants in", geneName, "", sep=" "))
-  
-  
-  ggsave(paste("aapos_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
-  
+    ggtitle(label = paste("FoldX", termName, "results for VKGL variants in", geneName, "", sep=" "),
+    subtitle = "(based on VKGL public release April 2023, ClinVar 20230702, FoldX 5.0, and AlphaFold2 human proteome v4)")
+  ggsave(paste("dens_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
 }
