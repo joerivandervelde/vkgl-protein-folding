@@ -140,28 +140,49 @@ setwd(tmpDir)
 results <- data.frame()
 for(i in 1:nrow(variants))
 {
-  cat(paste("Collecting results from ", variants[i, 7], "(", i, "of", dim(variants)[1],")\n", sep=" "))
-  protChangeDir <- paste(tmpDir, variants[i, 7], sep="/")
+  #i=1  # Debug purposes
+  cat(paste("Collecting results from ", variants[i, "ProtChange"], "(", i, "of", dim(variants)[1],")\n", sep=" "))
+  protChangeDir <- paste(tmpDir, variants[i, "ProtChange"], sep="/")
   if(length(list.files(protChangeDir, pattern="*.fxout")) == 0){
     cat("  no results...\n")
     next
   }
   avgDiff <- list.files(protChangeDir, pattern="Average")
   result <- read.table(file = paste(protChangeDir, avgDiff, sep="/"), header = TRUE, skip = 8, sep="\t")
-  result$protChange <- vkgl[i, "ProtChange"]
-  result$classificationVKGL <- vkgl[i, "Classification.x"]
-  result$classificationClinVar <- vkgl[i, "Classification.y"]
+  result$protChange <- variants[i, "ProtChange"]
+  result$classificationVKGL <- variants[i, "Classification.x"]
+  result$classificationClinVar <- variants[i, "Classification.y"]
+  result$source <- variants[i, "rowSource"]
   results <- rbind(results, result)
 }
 
-########################################################################################
-# Postprocess results: drop 0/'Pdb' columns, melt for ggplot, and make VUSless version #
-########################################################################################
-results <- results[, colSums(results != 0) > 0]
-dropCols <- c("Pdb")
-results<- results[ , !(names(results) %in% dropCols)]
-mResults <- melt(results, id = c("assembly", "chrom", "pos", "ref", "alt", "gene", "protChange","classification"))
-mResultsNoVUS <- mResults[mResults$classification != "VUS",]
+
+#########################################
+# Merge classifications into one column #
+#########################################
+results$classification <- "NA"
+results["source"][results["source"] == "VKGLClinVar"] <- "Both"
+for (i in 1:nrow(results)) {
+  if(is.na(results[i,]$classificationVKGL)){
+    results[i,]$classification <- results[i,]$classificationClinVar
+  }else if(is.na(results[i,]$classificationClinVar)){
+    results[i,]$classification <- results[i,]$classificationVKGL
+  }else if(results[i,]$classificationVKGL == results[i,]$classificationClinVar){
+    results[i,]$classification <- results[i,]$classificationVKGL
+  }else{
+    results[i,]$classification <- "Conflicting"
+  }
+}
+
+
+#######################################################################################
+# Postprocess results: drop 0-sum and 'Pdb' columns, melt for ggplot, add AA position #
+#######################################################################################
+results <- results[, colSums(results != 0, na.rm = TRUE) > 0]
+results <- results[ , !(names(results) %in% c("Pdb"))]
+mResults <- melt(results, id = c("protChange","source","classificationVKGL","classificationClinVar","classification"))
+mResults$aaLoc <- gsub("[A-Z]", "", mResults$protChange)
+mResults$aaLoc <- as.numeric(mResults$aaLoc)
 
 
 ########################
@@ -174,5 +195,9 @@ setwd(scriptDir)
 source("plot/PlotProtein.R")
 
 setwd(scriptDir)
-source("plot/PlotGene.R")
+source("plot/PlotPredictProtein.R")
+
+# Obsolete, difficult anyway because of combined b37/b38 data
+#setwd(scriptDir)
+#source("plot/PlotGene.R")
 
