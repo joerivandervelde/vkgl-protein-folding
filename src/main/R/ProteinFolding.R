@@ -10,6 +10,7 @@
 #install.packages('cutpointr')
 #install.packages('plyr')
 #install.packages('dplyr')
+#install.packages('Cairo')
 
 
 #################
@@ -27,12 +28,20 @@ library(dplyr)
 library(MASS)
 library(tidyr)
 library(seqminer)
+library(Cairo)
 
 
 ##############################
-# Set gene name for all following steps
+# Set gene name(s) for all following steps
 ##############################
-geneName <- "CFTR"
+succesfulGenes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH")
+failedGenes <- c("MAPT", "TSC2")
+# Keep track of results per gene
+columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec") 
+geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
+colnames(geneResults) = columns
+for (geneName in succesfulGenes) {
+# geneName <- "LDLR" # To try out new genes
 
 
 ##########################################
@@ -49,7 +58,7 @@ geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
 vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
-clinVarLoc <- "/Users/joeri/ClinVar/clinvar_20230722_protForFolding.tsv"
+#clinVarLoc <- "/Users/joeri/ClinVar/clinvar_20230722_protForFolding.tsv"
 
 
 #################################################
@@ -81,14 +90,16 @@ repPDBAbsLoc
 ##################################################
 # Load genome coordinates and clinical variation #
 ##################################################
-setwd(scriptDir)
-source("load/LoadGenomicCoordinates.R") # Coordinates of genes and exons for build 37 and 38
+#setwd(scriptDir)
+#source("load/LoadGenomicCoordinates.R") # Coordinates of genes and exons for build 37 and 38
 setwd(scriptDir)
 source("load/LoadVKGL.R") # Load VKGL data (B37)
-setwd(scriptDir)
-source("load/LoadClinVar.R") # Load ClinVar data (B38)
-variants <- merge(x = vkgl, y = clinVar, all = TRUE, by = "ProtChange")
-variants$rowSource <- apply(variants[c("source.x", "source.y")], 1, function(x) paste(na.omit(x), collapse = ""))
+#setwd(scriptDir)
+#source("load/LoadClinVar.R") # Load ClinVar data (B38)
+variants <- vkgl
+# Optionally merge with ClinVar for more variants
+#variants <- merge(x = vkgl, y = clinVar, all = TRUE, by = "ProtChange")
+#variants$rowSource <- apply(variants[c("source.x", "source.y")], 1, function(x) paste(na.omit(x), collapse = ""))
 
 
 #########################################
@@ -158,27 +169,41 @@ for(i in 1:nrow(variants))
   avgDiff <- list.files(protChangeDir, pattern="Average")
   result <- read.table(file = paste(protChangeDir, avgDiff, sep="/"), header = TRUE, skip = 8, sep="\t")
   result$protChange <- variants[i, "ProtChange"]
-  result$classificationVKGL <- variants[i, "Classification.x"]
-  result$classificationClinVar <- variants[i, "Classification.y"]
-  result$source <- variants[i, "rowSource"]
+  result$classificationVKGL <- variants[i, "Classification"]
+  # if merged with ClinVar, use below instead
+  #result$classificationVKGL <- variants[i, "Classification.x"]
+  #result$classificationClinVar <- variants[i, "Classification.y"]
+  #result$source <- variants[i, "rowSource"]
   results <- rbind(results, result)
+}
+
+#################################################
+# Check folding success rate and stop if needed #
+#################################################
+successRate = nrow(results)/nrow(variants)
+if(successRate < 0.1)
+{
+  stop(paste("Folding success rate for ",geneName," too low (",round(successRate, 2),", ",nrow(results)," out of ",nrow(variants),")",sep=""))
 }
 
 
 #########################################
 # Merge classifications into one column #
 #########################################
-results$classification <- "NA"
-results["source"][results["source"] == "VKGLClinVar"] <- "Both"
-for (i in 1:nrow(results)) {
-  if(is.na(results[i,]$classificationVKGL)){
-    results[i,]$classification <- results[i,]$classificationClinVar
-  }else if(is.na(results[i,]$classificationClinVar)){
-    results[i,]$classification <- results[i,]$classificationVKGL
-  }else if(results[i,]$classificationVKGL == results[i,]$classificationClinVar){
-    results[i,]$classification <- results[i,]$classificationVKGL
-  }else{
-    results[i,]$classification <- "Conflicting"
+# Only applies if rows have a source (after ClinVar merge)
+if(!is.null(results$source)){
+  results$classification <- "NA"
+  results["source"][results["source"] == "VKGLClinVar"] <- "Both"
+  for (i in 1:nrow(results)) {
+    if(is.na(results[i,]$classificationVKGL)){
+      results[i,]$classification <- results[i,]$classificationClinVar
+    }else if(is.na(results[i,]$classificationClinVar)){
+      results[i,]$classification <- results[i,]$classificationVKGL
+    }else if(results[i,]$classificationVKGL == results[i,]$classificationClinVar){
+      results[i,]$classification <- results[i,]$classificationVKGL
+    }else{
+      results[i,]$classification <- "Conflicting"
+    }
   }
 }
 
@@ -190,26 +215,36 @@ results <- results[, colSums(results != 0, na.rm = TRUE) > 0]
 results <- results[ , !(names(results) %in% c("Pdb"))]
 results$aaLoc <- gsub("[A-Z]", "", results$protChange)
 results$aaLoc <- as.numeric(results$aaLoc)
-mResults <- melt(results, id = c("aaLoc","protChange","source","classificationVKGL","classificationClinVar","classification"))
-
+mResults <- melt(results, id = c("aaLoc","protChange","classificationVKGL"))
+# If merged with ClinVar, use below instead
+# mResults <- melt(results, id = c("aaLoc","protChange","source","classificationVKGL","classificationClinVar","classification"))
+# Finally, if not merged, assign 'classification' directly from VKGL
+if(is.null(results$source)){
+  mResults$classification <- mResults$classificationVKGL
+}
 
 ########################
 # Create various plots #
 ########################
-setwd(scriptDir)
-source("plot/PlotOverview.R")
+# Often not so interesting, skip
+#setwd(scriptDir)
+#source("plot/PlotOverview.R")
 
 setwd(scriptDir)
 source("plot/PlotProtein.R")
 
-setwd(scriptDir)
-source("plot/PlotPredictProtein.R")
+# Ability to build a 2D predictor using KDE, overfits obviously
+# setwd(scriptDir)
+# source("plot/PlotPredictProtein.R")
 
-# Obsolete, difficult anyway because of combined b37/b38 data
+# Obsolete, difficult anyway because of combined b37/b38 data using ClinVar
 #setwd(scriptDir)
 #source("plot/PlotGene.R")
 
 # export any data
 #write.table(results, sep="\t",file="cftr_vkgl_clinvar_foldx_af2_results.txt", quote=FALSE, row.names =FALSE)
 
+}
+
+head(geneResults)
 
