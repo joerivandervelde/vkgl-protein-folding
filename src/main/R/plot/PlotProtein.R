@@ -7,12 +7,12 @@ setwd(geneWorkingDir)
 xmin <- min(mResults$aaLoc)
 xmax <- max(mResults$aaLoc)
 
-# Loop over variables and create one plot for each
-for(termName in unique(mResults$variable))
-{
+# Optionally loop over all variables and create one plot for each
+#for(termName in unique(mResults$variable))
+#{
     
   # select term data and arrange for plot, LP/P on top
-  # termName <- "total.energy" # Debug purposes
+  termName <- "total.energy" # Select term manually
   cat(paste("Plotting term", termName,"\n", sep=" "))
   selectVar <- mResults[mResults$variable==termName,]
   selectVar <- selectVar %>% arrange(factor(classification, levels = c("VUS","CF","LB/B","LP/P")))
@@ -34,4 +34,4 @@ for(termName in unique(mResults$variable))
           subtitle = "(based on VKGL public release April 2023, ClinVar 20230702, FoldX 5.0, and AlphaFold2 human proteome v4)")
   ggsave(paste("aapos_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
   
-}
+#}

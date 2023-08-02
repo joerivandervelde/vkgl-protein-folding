@@ -13,11 +13,11 @@ mResultsVKGLInclusive <- subset(mResults, source == "VKGL" | source == "Both")
 xmin <- min(mResultsVKGLInclusive$aaLoc)
 xmax <- max(mResultsVKGLInclusive$aaLoc)
 
-# Loop over variables and create one plot for each
-for(termName in unique(mResults$variable))
-{
+# Optionally loop over all variables and create one plot for each
+#for(termName in unique(mResults$variable))
+#{
   
-  # termName <- "total.energy" # Debug purposes
+  termName <- "total.energy" # Select term manually
   cat(paste("Plotting term", termName,"\n", sep=" "))
   
   # select VKGL term data and arrange for plot, LP/P on top
@@ -74,4 +74,4 @@ for(termName in unique(mResults$variable))
     ggtitle(label = paste("FoldX", termName, "results for VKGL variants in", geneName, "", sep=" "),
     subtitle = "(based on VKGL public release April 2023, ClinVar 20230702, FoldX 5.0, and AlphaFold2 human proteome v4)")
   ggsave(paste("dens_",geneName,"_",termName,".pdf",sep=""), width=9, height=5)
-}
+#}
