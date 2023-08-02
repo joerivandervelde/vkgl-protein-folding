@@ -34,13 +34,12 @@ library(Cairo)
 ##############################
 # Set gene name(s) for all following steps
 ##############################
-succesfulGenes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH")
-failedGenes <- c("MAPT", "TSC2")
+genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH") #, "MAPT", "TSC2", "LDLR", "GNAS"
 # Keep track of results per gene
-columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec") 
+columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
 colnames(geneResults) = columns
-for (geneName in succesfulGenes) {
+for (geneName in genes) {
 # geneName <- "LDLR" # To try out new genes
 
 
@@ -180,10 +179,10 @@ for(i in 1:nrow(variants))
 #################################################
 # Check folding success rate and stop if needed #
 #################################################
-successRate = nrow(results)/nrow(variants)
-if(successRate < 0.1)
+foldingSuccessRate = nrow(results)/nrow(variants)
+if(foldingSuccessRate < 0.5)
 {
-  stop(paste("Folding success rate for ",geneName," too low (",round(successRate, 2),", ",nrow(results)," out of ",nrow(variants),")",sep=""))
+  #stop(paste("Folding success rate for ",geneName," too low (",round(successRate, 2),", ",nrow(results)," out of ",nrow(variants),")",sep=""))
 }
 
 
@@ -246,5 +245,5 @@ source("plot/PlotProtein.R")
 
 }
 
-head(geneResults)
+geneResults
 

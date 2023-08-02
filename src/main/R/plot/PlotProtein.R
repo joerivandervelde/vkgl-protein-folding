@@ -33,7 +33,7 @@ xmax <- max(mResults$aaLoc)
   ymin <- min(selectVar$value)
   ymax <- max(selectVar$value)
   
-  geneResults <- rbind(geneResults, list(gene=geneName, nbenign=sum(selectVar[,"classification"]=="LB/B"), npatho=sum(selectVar[,"classification"]=="LP/P"), threshold=youdenIndex, ppv=ppv, npv=npv, sens=sens, spec=spec))
+  geneResults <- rbind(geneResults, list(gene=geneName, nbenign=sum(selectVar[,"classification"]=="LB/B"), npatho=sum(selectVar[,"classification"]=="LP/P"), threshold=youdenIndex, ppv=ppv, npv=npv, sens=sens, spec=spec, foldingSuccessRate=foldingSuccessRate))
   
   # Create and save plot
   ggplot() +
