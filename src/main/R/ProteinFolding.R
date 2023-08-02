@@ -121,17 +121,24 @@ for(i in 1:nrow(variants))
   cat("...done!\n")
 }
 
-######################################################
-# Cleanup all rotabase files and gene-specific plots #
-######################################################
+#############################################################
+# Cleanup plots and files that can be removed after folding #
+#############################################################
 setwd(dataDir)
 rotabaseFiles <- list.files(pattern="rotabase.txt", recursive=TRUE)
 file.remove(rotabaseFiles)
+
 setwd(geneWorkingDir)
-pngFiles <- list.files(pattern="*.png", recursive=TRUE)
-file.remove(pngFiles)
 pdfFiles <- list.files(pattern="*.pdf", recursive=TRUE)
 file.remove(pdfFiles)
+moleculesDir <- list.files(pattern="molecules", recursive=TRUE, include.dirs=TRUE)
+file.remove(moleculesDir)
+
+setwd(tmpDir)
+pdbFiles <- list.files(pattern="*.pdb", recursive=TRUE)
+file.remove(pdbFiles)
+indvFiles <- list.files(pattern="*individual_list.txt", recursive=TRUE)
+file.remove(indvFiles)
 
 
 ############################################
