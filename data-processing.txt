@@ -42,6 +42,8 @@ regex replace:
 \1\t\2\t\.\t\3\t\4\t\.\tPASS\tVKGL=\
 
 add header:
+(FOR NEXT RELEASE, LENGTHS SHOULD BE https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37)
+
 ##fileformat=VCFv4.2
 ##contig=<ID=1,length=248956422>
 ##contig=<ID=2,length=242193529>
