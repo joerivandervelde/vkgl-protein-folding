@@ -1,9 +1,6 @@
 # IntelliJ
 .idea
 
-# generated data
-data
-
 # Mac
 .DS_Store
 
