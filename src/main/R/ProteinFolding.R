@@ -34,30 +34,45 @@ library(Cairo)
 ##############################
 # Set gene name(s) for all following steps
 ##############################
-genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH", "MAPT", "FGFR1", "LDLR", "SCN1A", "BRCA1", "FGFR2", "GNAS", "PLCG2" ) #"TSC2"
+genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A",
+           "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A",
+           "MUTYH", "MAPT", "FGFR1", "LDLR", "SCN1A",
+           "BRCA1", "FGFR2", "GNAS", "PLCG2", "ABCG8",
+           "SCN10A", "KCNH2", "ABCA1", "SCN8A", "PTEN",
+           "MET", "RAF1", "F8", "TSC2")
 # Keep track of results per gene
 columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
 colnames(geneResults) = columns
-for (geneName in genes) {
-# geneName <- "TSC2" # To try out new genes
 
 
-##########################################
-# Create gene dirs and link to resources #
-##########################################
+##############################
+# Project dirs and resources #
+##############################
 rootDir <- "/Users/joeri/git/vkgl-protein-folding"
 scriptDir <- paste(rootDir, "src/main/R", sep="/")
 dataDir <- paste(rootDir, "data", sep="/")
-geneWorkingDir <- paste(dataDir, geneName, sep="/")
-mkdirs(geneWorkingDir)
-tmpDir <- paste(geneWorkingDir, "tmp", sep="/")
-mkdirs(tmpDir)
+outputsDir <- paste(rootDir, "out", sep="/")
+mkdirs(outputsDir)
+
 geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
 vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
 #clinVarLoc <- "/Users/joeri/ClinVar/clinvar_20230722_protForFolding.tsv"
+
+for (geneName in genes)
+{
+# geneName <- "SCN10A" # To try out new genes
+
+
+############################
+# Create gene and tmp dirs #
+############################
+geneWorkingDir <- paste(dataDir, geneName, sep="/")
+mkdirs(geneWorkingDir)
+tmpDir <- paste(geneWorkingDir, "tmp", sep="/")
+mkdirs(tmpDir)
 
 
 #################################################
@@ -255,5 +270,5 @@ source("plot/PlotProtein.R")
 
 geneResults
 
-setwd(dataDir)
+setwd(outputsDir)
 write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)

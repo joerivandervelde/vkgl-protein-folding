@@ -36,6 +36,7 @@ xmax <- max(mResults$aaLoc)
   geneResults <- rbind(geneResults, list(gene=geneName, nbenign=sum(selectVar[,"classification"]=="LB/B"), npatho=sum(selectVar[,"classification"]=="LP/P"), threshold=youdenIndex, ppv=ppv, npv=npv, sens=sens, spec=spec, foldingSuccessRate=foldingSuccessRate))
   
   # Create and save plot
+  setwd(outputsDir)
   ggplot() +
     theme_bw() + theme(panel.grid = element_blank()) +
     geom_point(data = selectVar, aes(x=aaLoc, y=value, colour=classification), alpha=1.0, size = 1, stroke = 1) + #, shape=source
