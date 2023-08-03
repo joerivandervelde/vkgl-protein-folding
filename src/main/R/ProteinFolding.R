@@ -50,20 +50,21 @@ colnames(geneResults) = columns
 # Project dirs and resources #
 ##############################
 rootDir <- "/Users/joeri/git/vkgl-protein-folding"
+resourcesDir <- paste(rootDir,"resources", sep="/")
 scriptDir <- paste(rootDir, "src/main/R", sep="/")
 dataDir <- paste(rootDir, "data", sep="/")
 outputsDir <- paste(rootDir, "out", sep="/")
 mkdirs(outputsDir)
 
-geneMappingLoc <- "/Applications/AlphaFold2/hgnc-uniprot-mapping.txt"
+geneMappingLoc <- paste(resourcesDir, "hgnc-uniprot-mapping.txt", sep="/")
+vkglProtLoc <- paste(resourcesDir, "VKGL_apr2023_protForFolding.tsv", sep="/")
 alphaFoldLoc <- "/Applications/AlphaFold2/UP000005640_9606_HUMAN_v4.tar"
-vkglProtLoc <- "/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv"
 foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x faster than the C11 version
 #clinVarLoc <- "/Users/joeri/ClinVar/clinvar_20230722_protForFolding.tsv"
 
 for (geneName in genes)
 {
-# geneName <- "SCN10A" # To try out new genes
+# geneName <- "CFTR" # To try out new genes
 
 
 ############################
