@@ -66,6 +66,9 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 geneMapping <- read.table(file=geneMappingLoc, sep = '\t',header = TRUE)
 uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneName]
 uniProtID
+if(identical(uniProtID, character(0))){
+  stop(paste("No UniProt ID found for gene", geneName))
+}
 
 
 ####################################################################################
