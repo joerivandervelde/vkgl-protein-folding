@@ -34,13 +34,13 @@ library(Cairo)
 ##############################
 # Set gene name(s) for all following steps
 ##############################
-genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH") #, "MAPT", "TSC2", "LDLR", "GNAS"
+genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A", "MLH1", "SOS1", "FGFR3", "ATP7B", "SCN5A", "MUTYH", "MAPT", "FGFR1", "LDLR", "SCN1A", "BRCA1", "FGFR2", "GNAS", "PLCG2" ) #"TSC2"
 # Keep track of results per gene
 columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
 colnames(geneResults) = columns
 for (geneName in genes) {
-# geneName <- "LDLR" # To try out new genes
+# geneName <- "TSC2" # To try out new genes
 
 
 ##########################################
@@ -65,7 +65,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 #################################################
 geneMapping <- read.table(file=geneMappingLoc, sep = '\t',header = TRUE)
 uniProtID <- geneMapping$UniProtKB.Swiss.Prot.ID[geneMapping$HGNC.symbol==geneName]
-uniProtID # if multiple, which one to pick?
+uniProtID
 
 
 ####################################################################################
@@ -74,9 +74,14 @@ uniProtID # if multiple, which one to pick?
 setwd(geneWorkingDir)
 if(length(list.files(pattern="*_Repair.pdb")) == 0){
   alphaFoldAll <- untar(alphaFoldLoc, list = TRUE)
-  alphaFoldPDBs <- grep(".pdb.gz",alphaFoldAll,value=TRUE)
-  PDBForGeneGz <- grep(uniProtID, alphaFoldPDBs,value=TRUE)
-  PDBForGeneGz # if more than 1, must select correct fragment (todo)
+  alphaFoldPDBs <- grep(".pdb.gz",alphaFoldAll, value=TRUE)
+  PDBForGeneGz <- grep(paste(uniProtID,collapse="|"), alphaFoldPDBs, value=TRUE)
+  if(identical(PDBForGeneGz, character(0))){
+    stop(paste("No PDB found for uniprot "), paste(uniProtID,collapse = " "))
+  }
+  if(length(PDBForGeneGz) > 1){
+    stop(paste("Multiple PDB and/or fragments found for uniprot "), paste(uniProtID, collapse = " "), ": ", paste(PDBForGeneGz, collapse=" "))
+  }
   untar(alphaFoldLoc, files = PDBForGeneGz)
   PDBForGene <- gunzip(PDBForGeneGz, overwrite=TRUE)[[1]]
   system(paste(foldx, " --command=RepairPDB --pdb=",PDBForGene,sep=""), intern = TRUE)
@@ -247,3 +252,5 @@ source("plot/PlotProtein.R")
 
 geneResults
 
+setwd(dataDir)
+write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)
