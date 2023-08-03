@@ -39,6 +39,5 @@ genesThr <- subset(geneCountsCast, LB >= threshold)
 genesThr <- subset(genesThr, LP >= threshold)
 geneDF$hasTwentyOrMoreLBBAndLPP <- geneDF$Gene %in% genesThr$Var2
 
-rootDir <- "/Users/joeri/git/vkgl-protein-folding"
-setwd(rootDir)
+setwd(outputsDir)
 write.table(geneDF, sep="\t",file="geneselect.txt", quote=FALSE, row.names =FALSE)
