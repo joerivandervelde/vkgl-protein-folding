@@ -10,7 +10,7 @@ public class VKGLProcessIntoProteinChanges {
         System.out.println("Starting...");
 
         File vkglMissense = new File("/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_annot_missense.vcf");
-        File outputFile = new File("/Users/joeri/VKGL/VKGL-prot/VKGL_apr2023_protForFolding.tsv");
+        File outputFile = new File("/Users/joeri/git/vkgl-protein-folding/resources/VKGL_apr2023_protForFolding.tsv");
 
         Map<String,String> protChangesToClsf = new TreeMap<>();
         Map<String,String> protChangesToChromPosRefAlt = new TreeMap<>();
@@ -63,6 +63,12 @@ public class VKGLProcessIntoProteinChanges {
                 // as per FoldX notation: WT residue, chain, residue number, mutant residue (e.g. "CA1490Y;")
                 String geneProt = geneSymbol + "\t" + proteinChangeSplit[0] + "A" + proteinPos + proteinChangeSplit[1];
                 String clf = infoSplit[0].replace("VKGL=","");
+
+                if(geneProt.contains("*"))
+                {
+                    System.out.println("SKipping " + geneProt);
+                    continue;
+                }
 
                 // unless there is a different protein notation for a transcript, the notation is duplicate
                 // filter here by checking if gene-prot combination is already present

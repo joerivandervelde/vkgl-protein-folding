@@ -130,6 +130,12 @@ public class ClinVarProcessIntoProteinChanges {
                         String geneProt = geneSymbol + "\t" + proteinChangeSplit[0] + "A" + proteinPos + proteinChangeSplit[1];
                         //String clf = infoSplit[0].replace("VKGL=","");
 
+                        if(geneProt.contains("*"))
+                        {
+                            System.out.println("SKipping " + geneProt);
+                            continue;
+                        }
+
                         // unless there is a different protein notation for a transcript, the notation is duplicate
                         // filter here by checking if gene-prot combination is already present
                         // at the same time check for any potential conflicting interpretations for this notation
