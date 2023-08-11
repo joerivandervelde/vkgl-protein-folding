@@ -10,6 +10,7 @@
 #install.packages('cutpointr')
 #install.packages('plyr')
 #install.packages('dplyr')
+#install.packages('seqminer')
 #install.packages('Cairo')
 
 
