@@ -252,27 +252,29 @@ if(is.null(results$source)){
 ########################
 # Create various plots #
 ########################
+
+# Enable this to produce new ddg protein plots
+setwd(scriptDir)
+source("plot/PrepPlotProtein.R")
+#source("plot/PlotProtein.R") # Disable to prevent updating plot timestamps
+
+# Disabled by default because irrelevant/obsolete:
 # Often not so interesting, skip
 #setwd(scriptDir)
 #source("plot/PlotOverview.R")
-
-setwd(scriptDir)
-source("plot/PlotProtein.R")
-
 # Ability to build a 2D predictor using KDE, overfits obviously
 # setwd(scriptDir)
 # source("plot/PlotPredictProtein.R")
-
 # Obsolete, difficult anyway because of combined b37/b38 data using ClinVar
 #setwd(scriptDir)
 #source("plot/PlotGene.R")
-
 # export any data
 #write.table(results, sep="\t",file="cftr_vkgl_clinvar_foldx_af2_results.txt", quote=FALSE, row.names =FALSE)
 
 }
 
 geneResults
+cat(paste("Median DDG gene threshold:",median(geneResults$threshold),"\n",sep=" "))
 
 setwd(outputsDir)
 write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)
