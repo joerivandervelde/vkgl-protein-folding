@@ -42,7 +42,7 @@ genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A",
            "SCN10A", "KCNH2", "ABCA1", "SCN8A", "PTEN",
            "MET", "RAF1", "F8", "TSC2", "BEST1",
            "ABCC8", "KCNQ1", "PTCH1", "SLC12A3", "TNNT2",
-           "MSH2")
+           "MSH2", "TSC1")
 # Keep track of results per gene
 columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
@@ -67,7 +67,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 
 for (geneName in genes)
 {
-# geneName <- "MSH2" # To try out new genes
+# geneName <- "TSC1" # To try out new genes
 
 
 ############################
@@ -256,6 +256,7 @@ if(is.null(results$source)){
 # Enable this to produce new ddg protein plots
 setwd(scriptDir)
 source("plot/PrepPlotProtein.R")
+#setwd(scriptDir)
 #source("plot/PlotProtein.R") # Disable to prevent updating plot timestamps
 
 # Disabled by default because irrelevant/obsolete:
@@ -275,6 +276,10 @@ source("plot/PrepPlotProtein.R")
 
 geneResults
 cat(paste("Median DDG gene threshold:",median(geneResults$threshold),"\n",sep=" "))
+
+ggplot() +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  geom_point(data = geneResults, aes(x=ppv, y=threshold), alpha=1.0, size = 1, stroke = 1)
 
 setwd(outputsDir)
 write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)
