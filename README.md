@@ -1,8 +1,11 @@
 # Protein folding on VKGL data
 ![Protein structure example of the CFTR gene](img/pymol-cftr-small.png)
 
-Deep learning has recently greatly enhanced our knowledge on protein structures while
-sophisticated algorithms for molecular dynamics have become accessible.
+Deep learning has greatly increased our coverage of human protein structures<sup>[1](https://www.nature.com/articles/s41586-021-03819-2) </sup> while sophisticated protein stability prediction algorithms have become accessible to novice users on commodity hardware<sup>[2](https://doi.org/10.1093/bioinformatics/btz184) </sup>.
+Decreased stability and consequent protein misfolding by DNA mutations is important mechanism for pathogenicity<sup>[3](https://pubs.acs.org/doi/10.1021/jacs.5b03743) </sup>
+The potential for genome diagnostics has been shown<sup>[4](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-022-01082-2) </sup> but ΔΔG thresholds differ greatly between proteins<sup>[4](https://doi.org/10.1186/1471-2105-10-S8-S8) </sup>.
+
+
 
 Perform folding of GRCh37 reference proteins and VKGL variant protein.
 and calculate the difference in Gibbs free energy change (ΔΔG)
