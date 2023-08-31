@@ -5,6 +5,6 @@
 #Pymol:
 
 reinitialize
-load /Users/joeri/git/vkgl-protein-folding/data/MEFV/tmp/NA766H/WT_AF-O15553-F1-model_v4_Repair_1.pdb, MEFV
-load /Users/joeri/git/vkgl-protein-folding/data/MEFV/tmp/NA766H/AF-O15553-F1-model_v4_Repair_1_Repair.pdb, MEFV_mut
-align MEFV, MEFV_mut
+load /Users/joeri/git/vkgl-protein-folding/data/MEFV/AF-O15553-F1-model_v4.pdb, MEFV
+load /Users/joeri/git/vkgl-protein-folding/data/MEFV/tmp/NA766H/AF-O15553-F1-model_v4_Repair_1_Repair.pdb, MEFV_N766H
+align MEFV, MEFV_N766H
