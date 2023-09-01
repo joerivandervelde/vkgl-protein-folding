@@ -1,0 +1,70 @@
+   ********************************************
+   ***                                      ***
+   ***             FoldX 5 (c)              ***
+   ***                                      ***
+   ***     code by the FoldX Consortium     ***
+   ***                                      ***
+   ***     Jesper Borg, Frederic Rousseau   ***
+   ***    Joost Schymkowitz, Luis Serrano   ***
+   ***    Peter Vanhee, Erik Verschueren    ***
+   ***     Lies Baeten, Javier Delgado      ***
+   ***       and Francois Stricher          ***
+   *** and any other of the 9! permutations ***
+   ***   based on an original concept by    ***
+   ***   Raphael Guerois and Luis Serrano   ***
+   ********************************************
+
+1 models read: AF-P18074-F1-model_v4_Repair.pdb
+1 models read: AF-P18074-F1-model_v4_Repair.pdb
+
+BackHbond       =               -581.77
+SideHbond       =               -228.26
+Energy_VdW      =               -931.50
+Electro         =               -39.95
+Energy_SolvP    =               1222.03
+Energy_SolvH    =               -1243.19
+Energy_vdwclash =               16.46
+energy_torsion  =               10.73
+backbone_vdwclash=              553.75
+Entropy_sidec   =               513.70
+Entropy_mainc   =               1145.60
+water bonds     =               0.00
+helix dipole    =               -21.53
+loop_entropy    =               0.00
+cis_bond        =               1.12
+disulfide       =               0.00
+kn electrostatic=               0.00
+partial covalent interactions = 0.00
+Energy_Ionisation =             2.15
+Entropy Complex =               0.00
+-----------------------------------------------------------
+Total          = 				  -134.43
+
+
+BackHbond       =               -581.77
+SideHbond       =               -228.26
+Energy_VdW      =               -931.50
+Electro         =               -39.95
+Energy_SolvP    =               1222.03
+Energy_SolvH    =               -1243.19
+Energy_vdwclash =               16.46
+energy_torsion  =               10.73
+backbone_vdwclash=              553.75
+Entropy_sidec   =               513.70
+Entropy_mainc   =               1145.60
+water bonds     =               0.00
+helix dipole    =               -21.53
+loop_entropy    =               0.00
+cis_bond        =               1.12
+disulfide       =               0.00
+kn electrostatic=               0.00
+partial covalent interactions = 0.00
+Energy_Ionisation =             2.15
+Entropy Complex =               0.00
+-----------------------------------------------------------
+Total          = 				  -134.43
+
+Starting BuildModel
+Reading AA158V;
+AA158V	Specified residue not found.
+no mutations performed.
