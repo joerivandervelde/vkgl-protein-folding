@@ -42,7 +42,10 @@ genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A",
            "SCN10A", "KCNH2", "ABCA1", "SCN8A", "PTEN",
            "MET", "RAF1", "F8", "TSC2", "BEST1",
            "ABCC8", "KCNQ1", "PTCH1", "SLC12A3", "TNNT2",
-           "MSH2", "TSC1", "IDUA", "HK1", "IMPDH1")
+           "MSH2", "TSC1", "IDUA", "HK1", "IMPDH1",
+           "MTOR", "NPC1", "PCSK9", "SCN4A", "SGSH",
+           "ABCD1", "ABCG5", "ATP1A3", "BRAF", "DEPDC5",
+           "DNMT3B", "ERCC2", "SCN9A", "TMEM67", "TPM1")
 # Keep track of results per gene
 columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
@@ -67,7 +70,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 
 for (geneName in genes)
 {
-# geneName <- "DEPDC5" # To try out new genes
+# geneName <- "TPM1" # To try out new genes
 
 
 ############################
