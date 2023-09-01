@@ -67,7 +67,7 @@ foldx <- "/Applications/FoldX/foldx5MacStd/foldx_20231231" # seems about 2.5x fa
 
 for (geneName in genes)
 {
-# geneName <- "IMPDH1" # To try out new genes
+# geneName <- "DEPDC5" # To try out new genes
 
 
 ############################
