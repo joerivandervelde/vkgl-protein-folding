@@ -279,6 +279,7 @@ source("plot/PrepPlotProtein.R")
 
 geneResults
 cat(paste("Median DDG gene threshold:",median(geneResults$threshold),"\n",sep=" "))
+cat(paste("Mean DDG gene threshold:",mean(geneResults$threshold),"\n",sep=" "))
 
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank()) +
