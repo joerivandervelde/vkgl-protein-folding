@@ -291,6 +291,8 @@ nGt10highPPVdevThr <- subset(nGt10highPPV, threshold > a+e | threshold < a-e)
 cat(paste("Deviating genes:\n",sep=""))
 nGt10highPPVdevThr
 
+cat(paste("In total",sum(geneResults$nbenign)+sum(geneResults$npatho),"variants were folded\n",sep=" "))
+
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank()) +
   geom_point(data = geneResults, aes(x=ppv, y=threshold), alpha=1.0, size = 1, stroke = 1)

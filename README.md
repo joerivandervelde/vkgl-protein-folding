@@ -25,6 +25,7 @@ According to the data, the chance that a variant is correctly labeled 'pathogeni
 
 Results
 
+In total 3299 variants were folded for 55 genes
 Based current limited set of 35 genes, mean DDG gene threshold: 1.48 (95%CI: 0.97-2)
 which is similar to previously found 1.58 and 1.50 ([link](https://www.nature.com/articles/s41598-020-72404-w))
 
