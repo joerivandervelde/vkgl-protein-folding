@@ -279,7 +279,11 @@ source("plot/PrepPlotProtein.R")
 
 geneResults
 cat(paste("Median DDG gene threshold:",median(geneResults$threshold),"\n",sep=" "))
-cat(paste("Mean DDG gene threshold:",mean(geneResults$threshold),"\n",sep=" "))
+a <- mean(geneResults$threshold)
+s <- sd(geneResults$threshold)
+n <- length(geneResults$threshold)
+e <- qnorm(0.975) * (s/sqrt(n))
+cat(paste("Mean DDG gene threshold: ",round(a,2)," (95%CI: ",round(a-e,2),"-",round(a+e,2),")\n",sep=""))
 
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank()) +
