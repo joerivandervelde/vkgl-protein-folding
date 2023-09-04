@@ -11,6 +11,11 @@ Perform folding of GRCh37 reference proteins and VKGL variant protein.
 and calculate the difference in Gibbs free energy change (ΔΔG)
 increase in ΔΔG less favourable folding, pathogenic
 
+Gene selection criteria: interesting for re-interpretation by number of VUS variants
+top 1000 meeste VUS (until 12 VUS variants), 160 genes with full structure, 71 partial structure
+select for monomers, enough initial benign/pathogenic variants
+supplemented with a number of hand-picked highly relevant genes such as BRCA1
+
 Example
 
 ![CFTR folding on VKGL variants](img/ddg_vkgl_CFTR.png)
@@ -20,9 +25,18 @@ According to the data, the chance that a variant is correctly labeled 'pathogeni
 
 Results
 
-Based current limited set of 35 genes, median threshold of 1.15762
-which is close to previously found 1.58 and 1.50 ([link](https://www.nature.com/articles/s41598-020-72404-w))
+Based current limited set of 35 genes, mean DDG gene threshold: 1.48 (95%CI: 0.97-2)
+which is similar to previously found 1.58 and 1.50 ([link](https://www.nature.com/articles/s41598-020-72404-w))
 
+which genes significantly deviate from this?
+select genes with enough samples withs (n >= 10 benign and n >=10 pathogenic) and PPV >= 90% (found 10: CFTR, MLH1, ATP7B, LDLR, SCN1A, FGFR2, F8, SLC12A3, MSH2, NPC1)
+select for genes above or below the 95%CI of threshold (> 2 or < 0.97)
+found two:
+SLC12A3 (folded 11 benign and 47 pathogenic variants, threshold 0.41 with PPV 93%, NPV 47%, sens 81%  and spec 73%)
+MSH2 (folded 46 benign and 18 pathogenic variants, threshold 3.66 with PPV 100%, NPV 87% NPV, sens 61%  and spec 100%)
+
+Discussion
+results seem to indicate that 1 in 5 genes has deviating DDG threshold
 
 ## Data used
 

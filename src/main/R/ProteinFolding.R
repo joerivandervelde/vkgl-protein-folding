@@ -285,6 +285,12 @@ n <- length(geneResults$threshold)
 e <- qnorm(0.975) * (s/sqrt(n))
 cat(paste("Mean DDG gene threshold: ",round(a,2)," (95%CI: ",round(a-e,2),"-",round(a+e,2),")\n",sep=""))
 
+nGt10 <- subset(geneResults, nbenign >= 10 & npatho >= 10)
+nGt10highPPV <- subset(nGt10, ppv >= 90)
+nGt10highPPVdevThr <- subset(nGt10highPPV, threshold > a+e | threshold < a-e)
+cat(paste("Deviating genes:\n",sep=""))
+nGt10highPPVdevThr
+
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank()) +
   geom_point(data = geneResults, aes(x=ppv, y=threshold), alpha=1.0, size = 1, stroke = 1)
