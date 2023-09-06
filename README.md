@@ -1,11 +1,9 @@
 # Protein folding on VKGL data
 ![Protein structure example of the CFTR gene](img/pymol-cftr-small.png)
 
-Deep learning has greatly increased our coverage of human protein structures<sup>[1](https://www.nature.com/articles/s41586-021-03819-2) </sup> while sophisticated protein stability prediction algorithms have become accessible to novice users on commodity hardware<sup>[2](https://doi.org/10.1093/bioinformatics/btz184) </sup>.
-Decreased stability and consequent protein misfolding by DNA mutations is important mechanism for pathogenicity<sup>[3](https://pubs.acs.org/doi/10.1021/jacs.5b03743) </sup>
+Deep learning has greatly increased our coverage of human protein structures<sup>[1](https://www.nature.com/articles/s41586-021-03819-2) </sup> while sophisticated algorithms to predict protein stability have become accessible to mainstream users on commodity hardware<sup>[2](https://doi.org/10.1093/bioinformatics/btz184) </sup>.
+DNA mutations that decreased protein stability and subsequent protein misfolding are an important mechanism for pathogenicity<sup>[3](https://pubs.acs.org/doi/10.1021/jacs.5b03743) </sup>
 The potential for genome diagnostics has been shown<sup>[4](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-022-01082-2) </sup> but ΔΔG thresholds differ greatly between proteins<sup>[4](https://doi.org/10.1186/1471-2105-10-S8-S8) </sup>.
-
-
 
 Perform folding of GRCh37 reference proteins and VKGL variant protein.
 and calculate the difference in Gibbs free energy change (ΔΔG)
@@ -25,7 +23,9 @@ According to the data, the chance that a variant is correctly labeled 'pathogeni
 
 Results
 
-In total 3299 variants were folded for 55 genes
+In total 5869 variants were folded for 55 genes
+1621 LB/B, 1678 LP/P, 2482 VUS and 88 conflicting
+
 Based current limited set of 35 genes, mean DDG gene threshold: 1.48 (95%CI: 0.97-2)
 which is similar to previously found 1.58 and 1.50 ([link](https://www.nature.com/articles/s41598-020-72404-w))
 
@@ -35,6 +35,13 @@ select for genes above or below the 95%CI of threshold (> 2 or < 0.97)
 found two:
 SLC12A3 (folded 11 benign and 47 pathogenic variants, threshold 0.41 with PPV 93%, NPV 47%, sens 81%  and spec 73%)
 MSH2 (folded 46 benign and 18 pathogenic variants, threshold 3.66 with PPV 100%, NPV 87% NPV, sens 61%  and spec 100%)
+
+for the 10 genes with solid threshold, look at their VUS variants
+
+In total there are 456 VUS variants in the reliable genes
+Using thresholds, there are 166 candidate VUS variants for LP reclassification:
+ATP7B    CFTR      F8   FGFR2    LDLR    MLH1    MSH2    NPC1   SCN1A SLC12A3
+17      22      14       6      17      26      23       4      21      16
 
 Discussion
 results seem to indicate that 1 in 5 genes has deviating DDG threshold

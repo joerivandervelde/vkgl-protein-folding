@@ -50,7 +50,7 @@ genes <- c("MEFV", "CFTR", "MECP2", "TERT", "CACNA1A",
 columns = c("gene","nbenign","npatho","threshold","ppv","npv","sens","spec","foldingSuccessRate") 
 geneResults = data.frame(matrix(nrow = 0, ncol = length(columns))) 
 colnames(geneResults) = columns
-
+allVariantResults <- data.frame()
 
 ##############################
 # Project dirs and resources #
@@ -198,12 +198,14 @@ for(i in 1:nrow(variants))
   avgDiff <- list.files(protChangeDir, pattern="Average")
   result <- read.table(file = paste(protChangeDir, avgDiff, sep="/"), header = TRUE, skip = 8, sep="\t")
   result$protChange <- variants[i, "ProtChange"]
+  result$gene <- geneName
   result$classificationVKGL <- variants[i, "Classification"]
   # if merged with ClinVar, use below instead
   #result$classificationVKGL <- variants[i, "Classification.x"]
   #result$classificationClinVar <- variants[i, "Classification.y"]
   #result$source <- variants[i, "rowSource"]
   results <- rbind(results, result)
+  allVariantResults <- rbind(allVariantResults, result)
 }
 
 #################################################
@@ -244,7 +246,7 @@ results <- results[, colSums(results != 0, na.rm = TRUE) > 0]
 results <- results[ , !(names(results) %in% c("Pdb"))]
 results$aaLoc <- gsub("[A-Z]", "", results$protChange)
 results$aaLoc <- as.numeric(results$aaLoc)
-mResults <- melt(results, id = c("aaLoc","protChange","classificationVKGL"))
+mResults <- melt(results, id = c("aaLoc","protChange","classificationVKGL","gene"))
 # If merged with ClinVar, use below instead
 # mResults <- melt(results, id = c("aaLoc","protChange","source","classificationVKGL","classificationClinVar","classification"))
 # Finally, if not merged, assign 'classification' directly from VKGL
@@ -293,9 +295,31 @@ nGt10highPPVdevThr
 
 cat(paste("In total",sum(geneResults$nbenign)+sum(geneResults$npatho),"variants were folded\n",sep=" "))
 
+# Inspect things like ppv vs threshold
 ggplot() +
   theme_bw() + theme(panel.grid = element_blank()) +
   geom_point(data = geneResults, aes(x=ppv, y=threshold), alpha=1.0, size = 1, stroke = 1)
 
+# Write gene results to file
 setwd(outputsDir)
 write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)
+
+# Overview of all classifications of folded variants
+table(allVariantResults$classificationVKGL)
+
+# How many VUS above threshold in reliable genes?
+anyVUSinGt10highPPV <- subset(allVariantResults, gene %in% nGt10highPPV$gene & classificationVKGL == "VUS")
+cat(paste("In total there are ", dim(anyVUSinGt10highPPV)[1], " VUS variants in the reliable genes",sep=""))
+VUSsesAboveThr <- data.frame()
+for(geneName in nGt10highPPV$gene)
+{
+  threshold <- nGt10highPPV[nGt10highPPV$gene==geneName,]$threshold
+  geneVUSses <- subset(allVariantResults, gene == geneName & classificationVKGL == "VUS")
+  geneVUSsesAboveThr <- subset(geneVUSses, total.energy > threshold)
+  VUSsesAboveThr <-rbind(VUSsesAboveThr, geneVUSsesAboveThr)
+}
+cat(paste("Using thresholds, there are ", dim(VUSsesAboveThr)[1], " candidate VUS variants for LP reclassification",sep=""))
+
+# Write VUS results to file
+setwd(outputsDir)
+write.table(VUSsesAboveThr, sep="\t",file="vus_lp_candidates.txt", quote=FALSE, row.names =FALSE)
