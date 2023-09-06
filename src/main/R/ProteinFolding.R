@@ -197,8 +197,13 @@ for(i in 1:nrow(variants))
   }
   avgDiff <- list.files(protChangeDir, pattern="Average")
   result <- read.table(file = paste(protChangeDir, avgDiff, sep="/"), header = TRUE, skip = 8, sep="\t")
+  result$assembly <- variants[i, "Assembly"]
+  result$chrom <- variants[i, "Chrom"]
+  result$pos <- variants[i, "Pos"]
+  result$ref <- variants[i, "Ref"]
+  result$alt <- variants[i, "Alt"]
+  result$gene <- variants[i, "Gene"]
   result$protChange <- variants[i, "ProtChange"]
-  result$gene <- geneName
   result$classificationVKGL <- variants[i, "Classification"]
   # if merged with ClinVar, use below instead
   #result$classificationVKGL <- variants[i, "Classification.x"]
@@ -246,7 +251,7 @@ results <- results[, colSums(results != 0, na.rm = TRUE) > 0]
 results <- results[ , !(names(results) %in% c("Pdb"))]
 results$aaLoc <- gsub("[A-Z]", "", results$protChange)
 results$aaLoc <- as.numeric(results$aaLoc)
-mResults <- melt(results, id = c("aaLoc","protChange","classificationVKGL","gene"))
+mResults <- melt(results, id = c("aaLoc","assembly","chrom","pos","ref","alt","gene","protChange","classificationVKGL"))
 # If merged with ClinVar, use below instead
 # mResults <- melt(results, id = c("aaLoc","protChange","source","classificationVKGL","classificationClinVar","classification"))
 # Finally, if not merged, assign 'classification' directly from VKGL
@@ -304,8 +309,9 @@ ggplot() +
 setwd(outputsDir)
 write.table(geneResults, sep="\t",file="ddg_vkgl_gene_results.txt", quote=FALSE, row.names =FALSE)
 
-# Overview of all classifications of folded variants
+# Overview of all classifications of folded variants and write out
 table(allVariantResults$classificationVKGL)
+write.table(allVariantResults, sep="\t",file="all_folded_variants.txt", quote=FALSE, row.names =FALSE)
 
 # How many VUS above threshold in reliable genes?
 anyVUSinGt10highPPV <- subset(allVariantResults, gene %in% nGt10highPPV$gene & classificationVKGL == "VUS")
@@ -319,6 +325,14 @@ for(geneName in nGt10highPPV$gene)
   VUSsesAboveThr <-rbind(VUSsesAboveThr, geneVUSsesAboveThr)
 }
 cat(paste("Using thresholds, there are ", dim(VUSsesAboveThr)[1], " candidate VUS variants for LP reclassification",sep=""))
+
+# Inspect VUSsesAboveThr -> total.energy vs CADD score?
+caddScores <- read.table(file="/Users/joeri/git/vkgl-protein-folding/resources/CADDResults-GRCh37-v1.6.tsv", sep = '\t',header = TRUE)
+mergeCadd <- merge(x = allVariantResults, y = caddScores, by.x = c("chrom", "pos", "ref", "alt"), by.y = c("Chrom", "Pos", "Ref", "Alt"))
+ggplot() +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  geom_point(data = mergeCadd, aes(x=PHRED, y=total.energy, color=classificationVKGL), alpha=1.0, size = 1, stroke = 1) +
+  scale_colour_manual(name = "VKGL\nclassification", values = c("LB/B" = "#28A014","VUS" = "#505050","LP/P" = "#E41A1C", "Conflicting" = "orange"))
 
 # Write VUS results to file
 setwd(outputsDir)
