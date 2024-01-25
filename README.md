@@ -8,14 +8,14 @@ The potential for genome diagnostics to recognize and report such variation has 
 Here, we perform protein folding on DNA variation from shared by Dutch genome diagnostic laboratories in the VKGL Data Sharing working group.
 Essentially, we calculate the difference in Gibbs free energy change (ΔΔG) between wild-type protein sequences and variant sequences.
 An increase in ΔΔG indicates that more energy is required for folding, making it less favourable and prone to pathogenic misfolding.
-The amino acid changes of the DNA variation is based on GRCh37 and introduced in the AlphaFold2 human proteome.
+The amino acid changes of the DNA variation is based on GRCh37 and introduced in the AlphaFold2 human proteome to enable automated processing.
 
 We selected genes for which many Variants of Unknown Significance (VUS) have been reported for potential re-interpretation or otherwise having a high clinical interest.
 In addition, we require a substantial amount of initial benign and pathogenic variants to increase chances of success.
 Lastly, the selected genes had protein products consist of single-fragment monomers.
 
 We calculate the ΔΔG for benign and pathogenic variants and use Youden's J statistic to estimate an optimal threshold between these two groups.
-For example, for CFTR variants the threshold is placed at 1.39.
+For example, the threshold for the cystic fibrosis transmembrane conductance regulator (CFTR) protein is placed at 1.39, shown below.
 According to these data, the chance that a new variant is correctly labeled as 'pathogenic' above this threshold is 90% (positive predictive value, PPV) and 68% of all pathogenic variants can be found this way (sensitivity).
 
 ![CFTR folding on VKGL variants](img/ddg_vkgl_CFTR.png)
